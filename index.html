@@ -21,7 +21,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', sans-serif; }
+    body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -103,6 +103,15 @@
       animation: shimmer 1.2s ease-in-out infinite;
     }
 
+    /* Drobne poprawki responsywności (żeby nie ucinało na telefonach) */
+    img, iframe { max-width: 100%; }
+    .safe-container { width: 100%; overflow-x: clip; }
+
+    @media (max-width: 640px) {
+      .line-button { padding: .95rem 1.4rem; font-size: .95rem; }
+      .section { scroll-margin-top: 86px; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .animate-fade-up, .hover-lift, .line-button { animation: none !important; transition: none !important; }
       .skeleton { animation: none !important; }
@@ -118,6 +127,12 @@
 
     const API_URL = "/api/listings";
     const FB_REVIEWS_URL = "https://www.facebook.com/profile.php?id=61554638487302&sk=reviews&locale=pl_PL";
+
+    const SOCIALS = {
+      facebook: "https://www.facebook.com/profile.php?id=61554638487302&locale=pl_PL",
+      instagram: "https://www.instagram.com/centrumnieruchomoscizk/",
+      tiktok: "https://www.tiktok.com/@centrum.nieruchom",
+    };
 
     const cn = (...classes) => classes.filter(Boolean).join(' ');
     const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
@@ -177,7 +192,11 @@
         ChevronRight: <path d="m9 18 6-6-6-6" />,
         Facebook: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />,
         Instagram: <><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></>,
-        Youtube: <><path d="M2.5 17a24.12 24.12 0 0 1 0-10C2.5 4.24 4.24 2.5 7 2.5h10c2.76 0 4.5 1.74 4.5 4.5s0 10 0 10c0 2.76-1.74 4.5-4.5 4.5H7c-2.76 0-4.5-1.74-4.5-4.5Z" /><path d="m10 15 5-3-5-3z" /></>,
+        /* Prosta ikonka TikTok (stylizowana) */
+        TikTok: <>
+          <path d="M14 3v10.5a3.5 3.5 0 1 1-3-3.46" />
+          <path d="M14 3c1.3 2.9 3.2 4.7 6 5v3c-2.9-.2-5.1-1.4-6-3" />
+        </>,
         Languages: <><path d="m5 8 6 6" /><path d="m4 14 6-6 2-3" /><path d="M2 5h12" /><path d="M7 2h1" /><path d="m22 22-5-10-5 10" /><path d="M14 18h6" /></>,
         LogIn: <><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" x2="3" y1="12" y2="12" /></>,
         LogOut: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></>,
@@ -301,7 +320,6 @@
     const SheetTrigger = ({ children }) => children;
 
     const FACEBOOK_REELS = [
-
       { id: 2, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1477845613236934%2F&show_text=false&width=267&t=0" },
       { id: 3, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F2264670390643136%2F&show_text=false&width=267&t=0" },
       { id: 4, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1176788144348415%2F&show_text=false&width=267&t=0" },
@@ -321,7 +339,8 @@
         testimonials: "Opinie klientów",
         contact: "Kontakt",
         allOffers: "Wszystkie Oferty",
-        trust: ["Sprzedaż", "Zakup", "Wynajem", "Pełna obsługa"],
+        /* USUNIĘTO 'Wynajem' z góry strony */
+        trust: ["Sprzedaż", "Zakup", "Pełna obsługa"],
         form: { name: "Imię i nazwisko", email: "Email", msg: "Wiadomość", send: "Wyślij", phone: "Numer telefonu", subject: "Temat wiadomości", consent: "Wyrażam zgodę na przetwarzanie moich danych osobowych." },
       },
       en: {
@@ -336,7 +355,7 @@
         testimonials: "Client reviews",
         contact: "Contact",
         allOffers: "All Listings",
-        trust: ["Sell", "Buy", "Rent", "Full service"],
+        trust: ["Sell", "Buy", "Full service"],
         form: { name: "Full name", email: "Email", msg: "Message", send: "Send", phone: "Phone number", subject: "Subject", consent: "I agree to the processing of my personal data." },
       }
     };
@@ -386,7 +405,7 @@
       const toggleFav = (id) => setFavs((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
       return (
-        <div className="min-h-screen soft-gradient text-zinc-900 selection:bg-blue-200 selection:text-blue-900">
+        <div className="min-h-screen soft-gradient text-zinc-900 selection:bg-blue-200 selection:text-blue-900 safe-container">
           <Header
             t={t} lang={lang} setLang={setLang}
             authed={authed} setAuthed={setAuthed}
@@ -441,12 +460,12 @@
 
       return (
         <header className="sticky top-0 z-50 glass border-b shadow-[0_18px_60px_-35px_rgba(2,6,23,.45)]">
-          <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-            <a href="#/" className="flex items-center gap-3 hover:opacity-95 transition-opacity">
-              <img src="https://i.imgur.com/UwnwhuV.png" alt="Centrum nieruchomości Logo" className="h-12 w-12 drop-shadow-sm" />
-              <div>
-                <div className="font-semibold tracking-tight">Centrum nieruchomości</div>
-                <div className="text-xs text-zinc-600">Zacharska Klaudia</div>
+          <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-3">
+            <a href="#/" className="flex items-center gap-3 hover:opacity-95 transition-opacity min-w-0">
+              <img src="https://i.imgur.com/UwnwhuV.png" alt="Centrum nieruchomości Logo" className="h-12 w-12 drop-shadow-sm shrink-0" />
+              <div className="min-w-0">
+                <div className="font-semibold tracking-tight truncate">Centrum nieruchomości</div>
+                <div className="text-xs text-zinc-600 truncate">Zacharska Klaudia</div>
               </div>
             </a>
 
@@ -574,13 +593,13 @@
     function Hero({ t }) {
       return (
         <section className="w-full section" id="hero" data-reveal>
-          <div className="mx-auto max-w-7xl px-4 py-20 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:py-20 lg:py-24 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
             <div className="text-center lg:text-left">
-              <h1 className="text-zinc-900 text-4xl md:text-6xl font-semibold hero-title">
+              <h1 className="text-zinc-900 text-4xl sm:text-5xl md:text-6xl font-semibold hero-title">
                 Znajdź swoje <span className="text-blue-600">wymarzone miejsce</span> z nami
               </h1>
 
-              <p className="mt-4 text-lg text-zinc-600 leading-relaxed">
+              <p className="mt-4 text-base sm:text-lg text-zinc-600 leading-relaxed">
                 Pomagamy w sprzedaży, zakupie i wynajmie nieruchomości — jasno, sprawnie i po ludzku.
               </p>
 
@@ -593,14 +612,14 @@
                 <Button
                   variant="outline"
                   size="lg"
-                  className="rounded-full px-8 py-6 text-base hover-lift"
+                  className="rounded-full px-8 py-6 text-base hover-lift w-full sm:w-auto"
                   onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })}
                 >
                   {t.cta}
                 </Button>
               </div>
 
-              <div className="mt-8 flex items-center justify-center lg:justify-start gap-3 text-sm text-zinc-600">
+              <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-zinc-600">
                 <div className="rounded-2xl glass px-4 py-2 border shadow-sm">Szybka odpowiedź</div>
                 <div className="rounded-2xl glass px-4 py-2 border shadow-sm">Transparentnie</div>
                 <div className="rounded-2xl glass px-4 py-2 border shadow-sm">Lokalnie</div>
@@ -636,7 +655,7 @@
 
     function Shorts({ t }) {
       return (
-        <section id="shorts" className="w-full py-24 section" aria-label={t.shorts} data-reveal>
+        <section id="shorts" className="w-full py-16 sm:py-24 section" aria-label={t.shorts} data-reveal>
           <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-2 gap-10 items-center">
             <div className="flex flex-col items-center text-center md:items-start md:text-left">
               <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">{t.shorts}</h3>
@@ -644,7 +663,7 @@
                 Zobacz nasze realizacje i inspiracje prosto z Facebook Reels.
               </p>
 
-              <div className="mt-6 flex gap-2">
+              <div className="mt-6 flex flex-wrap gap-2 justify-center md:justify-start">
                 <a href="#/offers">
                   <Button variant="secondary" className="rounded-2xl">Przeglądaj oferty</Button>
                 </a>
@@ -656,8 +675,8 @@
 
             <div className="flex items-center justify-center">
               <div
-                className="relative rounded-[3rem] border overflow-hidden glass shadow-[var(--shadow-soft)] hover-lift"
-                style={{ height:"560px", width:"300px" }}
+                className="relative rounded-[3rem] border overflow-hidden glass shadow-[var(--shadow-soft)] hover-lift w-full max-w-[340px]"
+                style={{ height:"min(560px, 78vh)" }}
               >
                 <div className="absolute inset-1 rounded-[2.6rem] overflow-y-scroll snap-y snap-mandatory scrollbar-none">
                   {FACEBOOK_REELS.map((reel) => (
@@ -685,7 +704,7 @@
 
     function About({ t }) {
       return (
-        <section id="about" className="w-full py-24 section" data-reveal>
+        <section id="about" className="w-full py-16 sm:py-24 section" data-reveal>
           <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-2 gap-12 items-center">
             <div className="flex flex-col items-center text-center md:items-start md:text-left">
               <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">{t.about}</h3>
@@ -714,24 +733,25 @@
               </div>
             </div>
 
-            <div className="flex justify-center items-center -space-x-12 md:-space-x-16 h-96">
-              <div className="relative transition-transform duration-300 hover:scale-[1.02]">
-                <img src="https://i.imgur.com/g9YnvTq.png" alt="Marcin Zacharski" className="w-48 md:w-60 aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
-                <div className="absolute bottom-4 left-0 bg-blue-600 text-white px-4 py-2 rounded-full whitespace-nowrap transform -translate-x-1/4 shadow-md text-center">
-                  <div className="text-xs md:text-sm font-semibold">Marcin Zacharski</div>
-                  <div className="text-[10px] md:text-xs font-light opacity-90">Agent Nieruchomości</div>
+            {/* Responsywne ułożenie zdjęć (bez ucinania) */}
+            <div className="flex flex-wrap justify-center items-end gap-4 sm:gap-6">
+              <div className="relative transition-transform duration-300 hover:scale-[1.02] w-[46%] sm:w-[30%] max-w-[260px]">
+                <img src="https://i.imgur.com/g9YnvTq.png" alt="Marcin Zacharski" className="w-full aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
+                <div className="absolute bottom-4 left-2 right-2 bg-blue-600 text-white px-3 py-2 rounded-full shadow-md text-center">
+                  <div className="text-xs sm:text-sm font-semibold">Marcin Zacharski</div>
+                  <div className="text-[10px] sm:text-xs font-light opacity-90">Agent Nieruchomości</div>
                 </div>
               </div>
 
-              <div className="relative z-10 transform translate-y-8 transition-transform duration-300 hover:scale-[1.02]">
-                <img src="https://i.imgur.com/SKLVSRG.png" alt="Klaudia Zacharska" className="w-56 md:w-64 aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
+              <div className="relative z-10 transition-transform duration-300 hover:scale-[1.02] w-[54%] sm:w-[34%] max-w-[290px]">
+                <img src="https://i.imgur.com/SKLVSRG.png" alt="Klaudia Zacharska" className="w-full aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
               </div>
 
-              <div className="relative transform -translate-y-8 transition-transform duration-300 hover:scale-[1.02]">
-                <img src="https://i.imgur.com/hnJemut.png" alt="Klaudia Zacharska" className="w-48 md:w-60 aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
-                <div className="absolute bottom-4 right-0 bg-blue-600 text-white px-4 py-2 rounded-full whitespace-nowrap transform translate-x-1/4 shadow-md text-center">
-                  <div className="text-xs md:text-sm font-semibold">Klaudia Zacharska</div>
-                  <div className="text-[10px] md:text-xs font-light opacity-90">Agentka Nieruchomości</div>
+              <div className="relative transition-transform duration-300 hover:scale-[1.02] w-[46%] sm:w-[30%] max-w-[260px]">
+                <img src="https://i.imgur.com/hnJemut.png" alt="Klaudia Zacharska" className="w-full aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
+                <div className="absolute bottom-4 left-2 right-2 bg-blue-600 text-white px-3 py-2 rounded-full shadow-md text-center">
+                  <div className="text-xs sm:text-sm font-semibold">Klaudia Zacharska</div>
+                  <div className="text-[10px] sm:text-xs font-light opacity-90">Agentka Nieruchomości</div>
                 </div>
               </div>
             </div>
@@ -742,7 +762,7 @@
 
     function ReviewsCTA({ t }) {
       return (
-        <section id="testimonials" className="w-full py-24 section" data-reveal>
+        <section id="testimonials" className="w-full py-16 sm:py-24 section" data-reveal>
           <div className="mx-auto max-w-7xl px-4">
             <div className="rounded-[2rem] glass border shadow-[var(--shadow-soft)] overflow-hidden">
               <div className="p-8 md:p-12 grid md:grid-cols-2 gap-10 items-center">
@@ -800,7 +820,7 @@
                       </div>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-3 gap-3">
+                    <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {Array.from({ length: 6 }).map((_, i) => (
                         <div key={i} className="rounded-2xl border bg-white/60 p-4">
                           <div className="flex gap-1 text-blue-600">
@@ -839,7 +859,7 @@
       const mapSrc = "https://www.google.com/maps?q=" + encodeURIComponent("ul. Starzyńskiego 3, 76-200 Słupsk, Polska") + "&output=embed";
 
       return (
-        <section id="contact" className="w-full py-24 section" data-reveal>
+        <section id="contact" className="w-full py-16 sm:py-24 section" data-reveal>
           <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-2 gap-10 items-start">
             <div className="flex flex-col items-center text-center md:items-start md:text-left">
               <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">{t.contact}</h3>
@@ -859,10 +879,38 @@
                   <span className="font-medium">ul. Starzyńskiego 3, Słupsk</span>
                 </div>
 
-                <div className="flex items-center gap-3 text-zinc-600 mt-5">
-                  <a className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors" href="#" aria-label="Facebook"><Icon name="Facebook"/></a>
-                  <a className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors" href="#" aria-label="Instagram"><Icon name="Instagram"/></a>
-                  <a className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors" href="#" aria-label="YouTube"><Icon name="Youtube"/></a>
+                {/* LINKI SOCIAL MEDIA (FB/IG/TikTok) */}
+                <div className="flex items-center justify-center md:justify-start gap-3 text-zinc-600 mt-5">
+                  <a
+                    className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors"
+                    href={SOCIALS.facebook}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Facebook"
+                    title="Facebook"
+                  >
+                    <Icon name="Facebook"/>
+                  </a>
+                  <a
+                    className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors"
+                    href={SOCIALS.instagram}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Instagram"
+                    title="Instagram"
+                  >
+                    <Icon name="Instagram"/>
+                  </a>
+                  <a
+                    className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors"
+                    href={SOCIALS.tiktok}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="TikTok"
+                    title="TikTok"
+                  >
+                    <Icon name="TikTok"/>
+                  </a>
                 </div>
               </div>
 
@@ -1007,7 +1055,7 @@
       return (
         <section className="w-full py-10 min-h-screen section" data-reveal>
           <div className="mx-auto max-w-7xl px-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <a href="#/" className="rounded-xl">
                   <Button variant="outline" className="rounded-2xl hover-lift">
@@ -1026,7 +1074,8 @@
               </div>
             </div>
 
-            <div className="mt-6 grid md:grid-cols-12 gap-3 p-4 rounded-[1.6rem] glass shadow-[var(--shadow-soft)] sticky top-[86px] z-20">
+            {/* Responsywne filtry (na mobile nie ucina) */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-3 p-4 rounded-[1.6rem] glass shadow-[var(--shadow-soft)] sticky top-[86px] z-20">
               <div className="md:col-span-3">
                 <Input placeholder="Szukaj..." value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
               </div>
@@ -1093,7 +1142,7 @@
             {!loading && error && <div className="mt-6 p-4 rounded-2xl bg-red-50 text-red-700 text-center border border-red-200">{error}</div>}
 
             {!loading && !error && (
-              <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {visible.map((item) => (
                   <div key={item.id} className="cursor-pointer" onClick={() => onSelect(item)}>
                     <OfferCard data={item} fav={favs.includes(item.id)} onFav={(e) => { e.stopPropagation(); toggleFav(item.id); }} />
@@ -1156,13 +1205,13 @@
               </div>
             </CardHeader>
 
-            <CardContent className="flex items-center justify-between">
+            <CardContent className="flex items-center justify-between gap-3">
               <div className="text-sm text-zinc-500">
                 {data.floor != null && String(data.floor).trim() !== ""
                   ? <>Piętro: <span className="font-semibold text-zinc-700">{data.floor}</span></>
                   : "Sprawdź szczegóły"}
               </div>
-              <Button variant="default" className="rounded-2xl">Szczegóły</Button>
+              <Button variant="default" className="rounded-2xl shrink-0">Szczegóły</Button>
             </CardContent>
           </Card>
         </div>
@@ -1183,7 +1232,6 @@
       const goNext = () => setIdx((i) => (total ? (i + 1) % total : 0));
       const goPrev = () => setIdx((i) => (total ? (i - 1 + total) % total : 0));
 
-      // swipe
       const startX = useRef(null);
 
       useEffect(() => {
@@ -1197,14 +1245,12 @@
         return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = 'unset'; };
       }, [total, onClose]);
 
-      useEffect(() => {
-        setIdx(0);
-      }, [offer?.id]);
+      useEffect(() => { setIdx(0); }, [offer?.id]);
 
       const Field = ({ label, value }) => (
         <div className="rounded-2xl border bg-zinc-50 p-3">
           <div className="text-xs text-zinc-500">{label}</div>
-          <div className="mt-1 font-semibold text-zinc-800">{value}</div>
+          <div className="mt-1 font-semibold text-zinc-800 break-words">{value}</div>
         </div>
       );
 
@@ -1221,9 +1267,8 @@
               <Icon name="X" className="h-6 w-6" />
             </button>
 
-            {/* GALERIA */}
             <div
-              className="w-full md:w-1/2 h-1/2 md:h-full relative select-none bg-black"
+              className="w-full md:w-1/2 h-[45vh] md:h-full relative select-none bg-black"
               onTouchStart={(e) => { startX.current = e.touches?.[0]?.clientX ?? null; }}
               onTouchEnd={(e) => {
                 const endX = e.changedTouches?.[0]?.clientX ?? null;
@@ -1278,19 +1323,18 @@
               )}
             </div>
 
-            {/* OPIS */}
             <div className="w-full md:w-1/2 p-6 md:p-8 overflow-y-auto bg-white">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge>{offer.type || "Brak informacji"}</Badge>
                 {offer.featured ? <Badge variant="secondary">Polecane</Badge> : null}
               </div>
 
-              <h2 className="text-3xl font-bold mt-2">{offer.title || "Brak tytułu"}</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold mt-2 break-words">{offer.title || "Brak tytułu"}</h2>
               <div className="flex items-center gap-2 text-zinc-500 mt-1">
                 <Icon name="MapPin" /> {offer.city || "Brak informacji"}
               </div>
 
-              <div className="text-4xl font-bold my-6">
+              <div className="text-3xl sm:text-4xl font-bold my-6 break-words">
                 {Number.isFinite(Number(offer.price)) ? currency(Number(offer.price)) : "Brak informacji"}
               </div>
 
@@ -1323,6 +1367,7 @@
       );
     }
 
+    /* FOOTER: usunięto "Polityka prywatności" i "RODO" */
     function Footer() {
       return (
         <footer className="py-10 border-t glass">
@@ -1333,10 +1378,6 @@
                 <div className="font-semibold tracking-tight">© {new Date().getFullYear()} Centrum nieruchomości</div>
                 <div className="text-xs text-zinc-600">Zacharska Klaudia</div>
               </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <a href="#" className="hover:text-blue-600 transition-colors">Polityka prywatności</a>
-              <a href="#" className="hover:text-blue-600 transition-colors">RODO</a>
             </div>
           </div>
         </footer>
