@@ -26,7 +26,7 @@
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
     :root{
-      --ring: 59 130 246; /* blue-500 */
+      --ring: 59 130 246;
       --shadow-soft: 0 24px 80px -40px rgba(2,6,23,.35);
       --shadow-card: 0 18px 60px -40px rgba(2,6,23,.30);
     }
@@ -87,11 +87,7 @@
       transform: translateY(-1px);
     }
 
-    .hero-title {
-      line-height: 1.05;
-      letter-spacing: -0.02em;
-    }
-
+    .hero-title { line-height: 1.05; letter-spacing: -0.02em; }
     .section { scroll-margin-top: 96px; }
 
     .skeleton {
@@ -363,6 +359,20 @@
       return v ? v : "Brak informacji";
     };
 
+    /**
+     * ✅ DLA MOBILE: filtry NIE są sticky (nie pływają) — zostają na górze i znikają po scrollu.
+     *   Desktop zostaje sticky jak było.
+     */
+    function useIsMobile(breakpointPx = 768) {
+      const [isMobile, setIsMobile] = useState(() => window.innerWidth < breakpointPx);
+      useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth < breakpointPx);
+        window.addEventListener("resize", onResize, { passive: true });
+        return () => window.removeEventListener("resize", onResize);
+      }, [breakpointPx]);
+      return isMobile;
+    }
+
     function App() {
       useRevealOnScroll();
 
@@ -472,9 +482,7 @@
               )}
 
               <a href="#/offers" className="ml-2">
-                <Button variant="secondary" className="rounded-2xl">
-                  {t.allOffers}
-                </Button>
+                <Button variant="secondary" className="rounded-2xl">{t.allOffers}</Button>
               </a>
 
               <div className="ml-1 flex items-center gap-2">
@@ -666,10 +674,7 @@
             </div>
 
             <div className="flex items-center justify-center">
-              <div
-                className="relative rounded-[3rem] border overflow-hidden glass shadow-[var(--shadow-soft)] hover-lift w-full max-w-[340px]"
-                style={{ height:"min(560px, 78vh)" }}
-              >
+              <div className="relative rounded-[3rem] border overflow-hidden glass shadow-[var(--shadow-soft)] hover-lift w-full max-w-[340px]" style={{ height:"min(560px, 78vh)" }}>
                 <div className="absolute inset-1 rounded-[2.6rem] overflow-y-scroll snap-y snap-mandatory scrollbar-none">
                   {FACEBOOK_REELS.map((reel) => (
                     <div key={reel.id} className="h-full w-full snap-start relative flex-shrink-0">
@@ -924,12 +929,7 @@
       );
     }
 
-    /**
-     * ✅ NAPRAWA SUWAKÓW NA TELEFONACH:
-     * - obsługa Pointer Events (działa dla touch + mouse)
-     * - fallback na Touch Events gdy przeglądarka nie wspiera pointerów
-     * - capture pointera + blokada scrolla podczas przeciągania (preventDefault)
-     */
+    // ✅ suwak touch + mouse
     function Slider({ className, min = 0, max = 100, step = 1, defaultValue = [0, 100], onValueChange }) {
       const [values, setValues] = useState(defaultValue);
       const rangeRef = useRef(null);
@@ -957,22 +957,16 @@
 
       const startDrag = (thumbIndex) => (e) => {
         activeThumb.current = thumbIndex;
-
-        // Pointer events (najlepsze)
         if (e?.pointerId != null && e.currentTarget?.setPointerCapture) {
           try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
         }
-
-        // ustaw od razu wartość pod palcem/myszą
         const clientX = e.touches?.[0]?.clientX ?? e.clientX;
         if (clientX != null) applyAt(clientX, thumbIndex);
       };
 
       const onMove = (e) => {
         if (activeThumb.current == null) return;
-        // blokuj scroll strony podczas przeciągania
         if (e.cancelable) e.preventDefault();
-
         const clientX = e.touches?.[0]?.clientX ?? e.clientX;
         if (clientX == null) return;
         applyAt(clientX, activeThumb.current);
@@ -983,7 +977,6 @@
       const left = ((values[0] - min) / (max - min)) * 100;
       const right = ((values[1] - min) / (max - min)) * 100;
 
-      // kliknięcie na track: ustaw bliższy suwak
       const onTrackDown = (e) => {
         const clientX = e.touches?.[0]?.clientX ?? e.clientX;
         if (clientX == null) return;
@@ -1000,7 +993,7 @@
         <div
           ref={rangeRef}
           className={cn("relative flex items-center select-none w-full h-8", className)}
-          style={{ touchAction: "none" }}   /* kluczowe dla mobile */
+          style={{ touchAction: "none" }}
           onPointerMove={onMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
@@ -1043,6 +1036,8 @@
     }
 
     function AllOffersPage({ t, favs, toggleFav, listings, loading, error, onSelect }) {
+      const isMobile = useIsMobile(768);
+
       const [query, setQuery] = useState("");
       const [city, setCity] = useState("");
       const [type, setType] = useState("");
@@ -1089,6 +1084,12 @@
         setQuery(""); setCity(""); setType(""); setRooms(0); setArea([30,160]); setPrice([300000,1500000]); setSort("newest"); setPage(1);
       };
 
+      // ✅ desktop: sticky, mobile: normal (nie sticky)
+      const filtersClass = cn(
+        "mt-6 grid grid-cols-1 md:grid-cols-12 gap-3 p-4 rounded-[1.6rem] glass shadow-[var(--shadow-soft)] z-20",
+        isMobile ? "relative" : "sticky top-[86px]"
+      );
+
       return (
         <section className="w-full py-10 min-h-screen section" data-reveal>
           <div className="mx-auto max-w-7xl px-4">
@@ -1111,7 +1112,7 @@
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-3 p-4 rounded-[1.6rem] glass shadow-[var(--shadow-soft)] sticky top-[86px] z-20">
+            <div className={filtersClass}>
               <div className="md:col-span-3">
                 <Input placeholder="Szukaj..." value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
               </div>
@@ -1255,6 +1256,7 @@
     }
 
     function OfferDetailsModal({ offer, onClose }) {
+      // (bez zmian)
       const images = useMemo(() => {
         const arr = Array.isArray(offer.images) ? offer.images.filter(Boolean) : [];
         if (arr.length) return arr;
@@ -1323,32 +1325,19 @@
 
               {total > 1 && (
                 <>
-                  <button
-                    aria-label="Poprzednie zdjęcie"
-                    onClick={goPrev}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-2xl bg-white/90 p-2 shadow hover:bg-white focus-ring"
-                  >
+                  <button aria-label="Poprzednie zdjęcie" onClick={goPrev}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-2xl bg-white/90 p-2 shadow hover:bg-white focus-ring">
                     <Icon name="ChevronLeft" className="h-6 w-6" />
                   </button>
-                  <button
-                    aria-label="Następne zdjęcie"
-                    onClick={goNext}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-2xl bg-white/90 p-2 shadow hover:bg-white focus-ring"
-                  >
+                  <button aria-label="Następne zdjęcie" onClick={goNext}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-2xl bg-white/90 p-2 shadow hover:bg-white focus-ring">
                     <Icon name="ChevronRight" className="h-6 w-6" />
                   </button>
 
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
                     {images.map((_, i) => (
-                      <button
-                        key={i}
-                        aria-label={`Zdjęcie ${i + 1}`}
-                        onClick={() => setIdx(i)}
-                        className={cn(
-                          "h-2.5 w-2.5 rounded-full transition-all",
-                          i === idx ? "bg-white" : "bg-white/40 hover:bg-white/70"
-                        )}
-                      />
+                      <button key={i} aria-label={`Zdjęcie ${i + 1}`} onClick={() => setIdx(i)}
+                        className={cn("h-2.5 w-2.5 rounded-full transition-all", i === idx ? "bg-white" : "bg-white/40 hover:bg-white/70")} />
                     ))}
                   </div>
 
@@ -1391,12 +1380,6 @@
                   {offer.description ? offer.description : "Brak informacji"}
                 </p>
               </div>
-
-              {total > 1 && (
-                <div className="mt-6 text-xs text-zinc-500">
-                  Tip: możesz przewijać zdjęcia strzałkami na klawiaturze (← / →) lub przesunięciem palca.
-                </div>
-              )}
             </div>
           </div>
         </div>
