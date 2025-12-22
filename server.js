@@ -5,26 +5,24 @@ const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ na Railway ustawisz MONGODB_URI w Variables
-const MONGO_URI = process.env.MONGO_URI;
+// ✅ Railway Variables: ustaw MONGO_URL
+const MONGO_URL = process.env.MONGO_URL;
 
-// Zdjęcia są base64 -> requesty potrafią być duże
+// Base64 zdjęcia => duże requesty
 app.use(express.json({ limit: "80mb" }));
 
-// Serwuj statycznie pliki z root (index.html, admin.html, obrazki itd.)
+// Serwuj statycznie pliki z root (index.html, admin.html, favicon, itd.)
 app.use(express.static(__dirname, { extensions: ["html"] }));
 
 // ---------- Mongo / Mongoose ----------
-if (!MONGO_URI) {
-  console.error("❌ Brak MONGO_URI w env (Railway Variables).");
+if (!MONGO_URL) {
+  console.error("❌ Brak MONGO_URL w env (Railway Variables).");
 }
 
 mongoose
-  .connect(MONGO_URI || "mongo://127.0.0.1:27017/centrum", {
-    // mongoose 8 nie wymaga extra opcji
-  })
+  .connect(MONGO_URL || "mongodb://127.0.0.1:27017/centrum")
   .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ Mongo connect error:", err.message));
+  .catch((err) => console.error("❌ MongoDB connect error:", err.message));
 
 const ListingSchema = new mongoose.Schema(
   {
@@ -85,7 +83,7 @@ function normalizeIncoming(body = {}) {
 
   out.image = String(out.image || out.images[0] || "");
 
-  // minimalna walidacja (czytelny błąd)
+  // minimalna walidacja (czytelne błędy)
   if (out.title.length < 3) throw new Error("Title too short");
   if (out.city.length < 2) throw new Error("City too short");
   if (!Number.isFinite(out.price) || out.price <= 0) throw new Error("Invalid price");
@@ -99,19 +97,21 @@ function normalizeIncoming(body = {}) {
 
 // ---------- API ----------
 
-// GET all
+// GET all listings
 app.get("/api/listings", async (req, res) => {
   try {
     const items = await Listing.find({}).sort({ createdAt: -1 }).lean();
-    // ✅ dodaj id (żeby twój front nie musiał ogarniać _id)
+
+    // ✅ kluczowe: dodaj pole `id`, bo front używa item.id
     const out = items.map((x) => ({ ...x, id: String(x._id) }));
+
     res.json(out);
   } catch (e) {
     res.status(500).json({ error: String(e.message || e) });
   }
 });
 
-// GET one
+// GET one listing
 app.get("/api/listings/:id", async (req, res) => {
   try {
     const item = await Listing.findById(req.params.id).lean();
@@ -122,18 +122,18 @@ app.get("/api/listings/:id", async (req, res) => {
   }
 });
 
-// CREATE
+// CREATE listing
 app.post("/api/listings", async (req, res) => {
   try {
     const payload = normalizeIncoming(req.body);
     const created = await Listing.create(payload);
-    res.status(201).json({ ...(created.toObject()), id: String(created._id) });
+    res.status(201).json({ ...created.toObject(), id: String(created._id) });
   } catch (e) {
     res.status(400).json({ error: String(e.message || e) });
   }
 });
 
-// UPDATE
+// UPDATE listing
 app.put("/api/listings/:id", async (req, res) => {
   try {
     const payload = normalizeIncoming(req.body);
@@ -142,13 +142,13 @@ app.put("/api/listings/:id", async (req, res) => {
       runValidators: true
     });
     if (!updated) return res.status(404).json({ error: "Not found" });
-    res.json({ ...(updated.toObject()), id: String(updated._id) });
+    res.json({ ...updated.toObject(), id: String(updated._id) });
   } catch (e) {
     res.status(400).json({ error: String(e.message || e) });
   }
 });
 
-// DELETE
+// DELETE listing
 app.delete("/api/listings/:id", async (req, res) => {
   try {
     const deleted = await Listing.findByIdAndDelete(req.params.id);
