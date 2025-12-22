@@ -26,11 +26,12 @@
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
     :root{
-      --ring: 59 130 246;
+      --ring: 59 130 246; /* blue-500 */
       --shadow-soft: 0 24px 80px -40px rgba(2,6,23,.35);
       --shadow-card: 0 18px 60px -40px rgba(2,6,23,.30);
     }
 
+    /* CTA z linią */
     .line-button {
       align-items: center; background-color: #2563eb; color: #fff; cursor: pointer; display: inline-flex;
       font-family: ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
@@ -328,7 +329,7 @@
         testimonials: "Opinie klientów",
         contact: "Kontakt",
         allOffers: "Wszystkie Oferty",
-        trust: ["Sprzedaż", "Zakup", "Pełna obsługa"],
+        trust: ["Sprzedaż", "Zakup", "Pełna obsługa"], // ✅ usunięto “Wynajem”
         form: { name: "Imię i nazwisko", email: "Email", msg: "Wiadomość", send: "Wyślij", phone: "Numer telefonu", subject: "Temat wiadomości", consent: "Wyrażam zgodę na przetwarzanie moich danych osobowych." },
       },
       en: {
@@ -358,20 +359,6 @@
       const v = String(val).trim();
       return v ? v : "Brak informacji";
     };
-
-    /**
-     * ✅ DLA MOBILE: filtry NIE są sticky (nie pływają) — zostają na górze i znikają po scrollu.
-     *   Desktop zostaje sticky jak było.
-     */
-    function useIsMobile(breakpointPx = 768) {
-      const [isMobile, setIsMobile] = useState(() => window.innerWidth < breakpointPx);
-      useEffect(() => {
-        const onResize = () => setIsMobile(window.innerWidth < breakpointPx);
-        window.addEventListener("resize", onResize, { passive: true });
-        return () => window.removeEventListener("resize", onResize);
-      }, [breakpointPx]);
-      return isMobile;
-    }
 
     function App() {
       useRevealOnScroll();
@@ -648,6 +635,7 @@
                 </div>
               </div>
             </div>
+
           </div>
         </section>
       );
@@ -751,6 +739,7 @@
                 </div>
               </div>
             </div>
+
           </div>
         </section>
       );
@@ -919,7 +908,9 @@
                     <Button type="submit" className="w-full rounded-2xl hover-lift" disabled={!allValid}>
                       {t.form.send}
                     </Button>
-                    <div className="text-xs text-zinc-500 text-center">Wysyłka w tej wersji jest demo (bez backendu).</div>
+                    <div className="text-xs text-zinc-500 text-center">
+                      Wysyłka w tej wersji jest demo (bez backendu).
+                    </div>
                   </form>
                 )}
               </CardContent>
@@ -929,7 +920,7 @@
       );
     }
 
-    // ✅ suwak touch + mouse
+    // ✅ Slider działa na telefonie (touch) + myszka (desktop)
     function Slider({ className, min = 0, max = 100, step = 1, defaultValue = [0, 100], onValueChange }) {
       const [values, setValues] = useState(defaultValue);
       const rangeRef = useRef(null);
@@ -1036,8 +1027,6 @@
     }
 
     function AllOffersPage({ t, favs, toggleFav, listings, loading, error, onSelect }) {
-      const isMobile = useIsMobile(768);
-
       const [query, setQuery] = useState("");
       const [city, setCity] = useState("");
       const [type, setType] = useState("");
@@ -1084,11 +1073,8 @@
         setQuery(""); setCity(""); setType(""); setRooms(0); setArea([30,160]); setPrice([300000,1500000]); setSort("newest"); setPage(1);
       };
 
-      // ✅ desktop: sticky, mobile: normal (nie sticky)
-      const filtersClass = cn(
-        "mt-6 grid grid-cols-1 md:grid-cols-12 gap-3 p-4 rounded-[1.6rem] glass shadow-[var(--shadow-soft)] z-20",
-        isMobile ? "relative" : "sticky top-[86px]"
-      );
+      // ✅ NIGDY nie sticky — filtry nie zasłaniają ogłoszeń na żadnym ekranie
+      const filtersClass = "mt-6 grid grid-cols-1 md:grid-cols-12 gap-3 p-4 rounded-[1.6rem] glass shadow-[var(--shadow-soft)]";
 
       return (
         <section className="w-full py-10 min-h-screen section" data-reveal>
@@ -1176,7 +1162,11 @@
               </div>
             )}
 
-            {!loading && error && <div className="mt-6 p-4 rounded-2xl bg-red-50 text-red-700 text-center border border-red-200">{error}</div>}
+            {!loading && error && (
+              <div className="mt-6 p-4 rounded-2xl bg-red-50 text-red-700 text-center border border-red-200">
+                {error}
+              </div>
+            )}
 
             {!loading && !error && (
               <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
@@ -1256,7 +1246,6 @@
     }
 
     function OfferDetailsModal({ offer, onClose }) {
-      // (bez zmian)
       const images = useMemo(() => {
         const arr = Array.isArray(offer.images) ? offer.images.filter(Boolean) : [];
         if (arr.length) return arr;
@@ -1397,6 +1386,7 @@
                 <div className="text-xs text-zinc-600">Zacharska Klaudia</div>
               </div>
             </div>
+            <!-- ✅ usunięto Polityka prywatności i RODO -->
           </div>
         </footer>
       );
