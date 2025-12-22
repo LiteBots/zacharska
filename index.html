@@ -184,7 +184,6 @@
         UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" x2="19" y1="8" y2="14" /><line x1="22" x2="16" y1="11" y2="11" /></>,
         Loader2: <path d="M21 12a9 9 0 1 1-6.219-8.56" />,
         X: <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>,
-        /* ✅ NAPRAWA: ArrowUp musi być opakowany w fragment <>...</> */
         ArrowUp: <><path d="m5 12 7-7 7 7" /><path d="M12 19V5" /></>,
       };
       return (
@@ -340,6 +339,17 @@
         trust: ["Sell", "Buy", "Rent", "Full service"],
         form: { name: "Full name", email: "Email", msg: "Message", send: "Send", phone: "Phone number", subject: "Subject", consent: "I agree to the processing of my personal data." },
       }
+    };
+
+    const infoOr = (val) => {
+      const v = (val ?? "").toString().trim();
+      return v ? v : "Brak informacji";
+    };
+
+    const safeFloor = (val) => {
+      if (val === null || val === undefined) return "Brak informacji";
+      const v = String(val).trim();
+      return v ? v : "Brak informacji";
     };
 
     function App() {
@@ -974,8 +984,8 @@
           );
 
         if (sort === "cheapest") out.sort((a, b) => Number(a.price) - Number(b.price));
-        else if (sort === "newest") out.sort((a, b) => (b.createdAt || b.id || 0) - (a.createdAt || a.id || 0));
-        else if (sort === "featured") out.sort((a,b) => (b.terrace ? 1:0) - (a.terrace ? 1:0) || (b.createdAt || 0) - (a.createdAt || 0));
+        else if (sort === "newest") out.sort((a, b) => (new Date(b.createdAt || 0)).getTime() - (new Date(a.createdAt || 0)).getTime());
+        else if (sort === "featured") out.sort((a,b) => (b.featured ? 1:0) - (a.featured ? 1:0) || (new Date(b.createdAt || 0)).getTime() - (new Date(a.createdAt || 0)).getTime());
         return out;
       }, [listings, query, city, type, rooms, area, price, sort]);
 
@@ -1097,13 +1107,29 @@
     }
 
     function OfferCard({ data, fav, onFav }) {
-      const cover = (Array.isArray(data.images) && data.images.length ? data.images[0] : data.image) || "";
+      const imgs = (Array.isArray(data.images) && data.images.length ? data.images : (data.image ? [data.image] : []));
+      const cover = imgs[0] || "";
+      const count = imgs.length;
+
       return (
         <div className="relative group">
           <Card className="overflow-hidden rounded-[1.6rem] border-zinc-200/70 glass shadow-[0_24px_80px_-55px_rgba(2,6,23,0.35)] transition-transform duration-300 group-hover:-translate-y-1">
             <div className="relative h-56">
-              <img src={cover} alt={data.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+              {cover ? (
+                <img src={cover} alt={data.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+              ) : (
+                <div className="h-full w-full bg-zinc-200/60 flex items-center justify-center text-zinc-600">
+                  Brak zdjęcia
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0" />
+
+              {count > 1 && (
+                <div className="absolute bottom-3 right-3 px-2 py-1 rounded-xl bg-black/65 text-white text-xs backdrop-blur border border-white/10">
+                  1/{count}
+                </div>
+              )}
+
               <button
                 aria-label={fav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
                 onClick={onFav}
@@ -1114,6 +1140,7 @@
               >
                 <Icon name="Heart" className={cn("h-4 w-4", fav && "fill-current")} />
               </button>
+
               <Badge className="absolute left-3 top-3 bg-black/70 text-white backdrop-blur border-0">{data.type}</Badge>
 
               <div className="absolute bottom-3 left-3 right-3 text-white">
@@ -1131,7 +1158,9 @@
 
             <CardContent className="flex items-center justify-between">
               <div className="text-sm text-zinc-500">
-                {data.floor != null ? <>Piętro: <span className="font-semibold text-zinc-700">{data.floor}</span></> : "Sprawdź szczegóły"}
+                {data.floor != null && String(data.floor).trim() !== ""
+                  ? <>Piętro: <span className="font-semibold text-zinc-700">{data.floor}</span></>
+                  : "Sprawdź szczegóły"}
               </div>
               <Button variant="default" className="rounded-2xl">Szczegóły</Button>
             </CardContent>
@@ -1141,14 +1170,26 @@
     }
 
     function OfferDetailsModal({ offer, onClose }) {
-      const images = Array.isArray(offer.images) && offer.images.length ? offer.images : [offer.image];
-      const [idx, setIdx] = useState(0);
+      const images = useMemo(() => {
+        const arr = Array.isArray(offer.images) ? offer.images.filter(Boolean) : [];
+        if (arr.length) return arr;
+        if (offer.image) return [offer.image];
+        return [];
+      }, [offer]);
+
       const total = images.length;
+      const [idx, setIdx] = useState(0);
+
+      const goNext = () => setIdx((i) => (total ? (i + 1) % total : 0));
+      const goPrev = () => setIdx((i) => (total ? (i - 1 + total) % total : 0));
+
+      // swipe
+      const startX = useRef(null);
 
       useEffect(() => {
         const onKey = (e) => {
-          if (e.key === "ArrowRight") setIdx(i => (i + 1) % total);
-          if (e.key === "ArrowLeft") setIdx(i => (i - 1 + total) % total);
+          if (e.key === "ArrowRight") goNext();
+          if (e.key === "ArrowLeft") goPrev();
           if (e.key === "Escape") onClose();
         };
         window.addEventListener("keydown", onKey);
@@ -1156,36 +1197,126 @@
         return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = 'unset'; };
       }, [total, onClose]);
 
+      useEffect(() => {
+        setIdx(0);
+      }, [offer?.id]);
+
+      const Field = ({ label, value }) => (
+        <div className="rounded-2xl border bg-zinc-50 p-3">
+          <div className="text-xs text-zinc-500">{label}</div>
+          <div className="mt-1 font-semibold text-zinc-800">{value}</div>
+        </div>
+      );
+
+      const mainImg = total ? images[idx] : "";
+
       return (
         <div className="fixed inset-0 z-[100] bg-black/55 backdrop-blur-sm animate-fade-up" onClick={onClose} role="dialog" aria-modal="true">
           <div onClick={(e) => e.stopPropagation()} className="relative w-full h-full overflow-hidden flex flex-col md:flex-row">
             <button
               aria-label="Zamknij"
               onClick={onClose}
-              className="absolute top-4 right-4 z-10 p-2 rounded-2xl bg-white/90 text-zinc-800 hover:bg-white transition-colors shadow focus-ring"
+              className="absolute top-4 right-4 z-20 p-2 rounded-2xl bg-white/90 text-zinc-800 hover:bg-white transition-colors shadow focus-ring"
             >
               <Icon name="X" className="h-6 w-6" />
             </button>
 
-            <div className="w-full md:w-1/2 h-1/2 md:h-full relative select-none">
-              <img src={images[idx]} alt={offer.title} className="h-full w-full object-cover" />
+            {/* GALERIA */}
+            <div
+              className="w-full md:w-1/2 h-1/2 md:h-full relative select-none bg-black"
+              onTouchStart={(e) => { startX.current = e.touches?.[0]?.clientX ?? null; }}
+              onTouchEnd={(e) => {
+                const endX = e.changedTouches?.[0]?.clientX ?? null;
+                if (startX.current == null || endX == null) return;
+                const dx = endX - startX.current;
+                if (Math.abs(dx) < 40) return;
+                if (dx < 0) goNext();
+                else goPrev();
+              }}
+            >
+              {mainImg ? (
+                <img src={mainImg} alt={offer.title} className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-white/80">Brak zdjęć</div>
+              )}
+
+              {total > 1 && (
+                <>
+                  <button
+                    aria-label="Poprzednie zdjęcie"
+                    onClick={goPrev}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-2xl bg-white/90 p-2 shadow hover:bg-white focus-ring"
+                  >
+                    <Icon name="ChevronLeft" className="h-6 w-6" />
+                  </button>
+                  <button
+                    aria-label="Następne zdjęcie"
+                    onClick={goNext}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-2xl bg-white/90 p-2 shadow hover:bg-white focus-ring"
+                  >
+                    <Icon name="ChevronRight" className="h-6 w-6" />
+                  </button>
+
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
+                    {images.map((_, i) => (
+                      <button
+                        key={i}
+                        aria-label={`Zdjęcie ${i + 1}`}
+                        onClick={() => setIdx(i)}
+                        className={cn(
+                          "h-2.5 w-2.5 rounded-full transition-all",
+                          i === idx ? "bg-white" : "bg-white/40 hover:bg-white/70"
+                        )}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="absolute top-4 left-4 z-10 px-3 py-1 rounded-2xl bg-black/55 text-white text-sm border border-white/10 backdrop-blur">
+                    {idx + 1}/{total}
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="w-full md:w-1/2 p-8 overflow-y-auto bg-white">
-              <Badge>{offer.type}</Badge>
-              <h2 className="text-3xl font-bold mt-2">{offer.title}</h2>
-              <div className="flex items-center gap-2 text-zinc-500 mt-1"><Icon name="MapPin" /> {offer.city}</div>
-              <div className="text-4xl font-bold my-6">{currency(offer.price)}</div>
-
-              <div className="grid grid-cols-2 gap-4 text-base border-t pt-6">
-                <div className="font-semibold text-zinc-600">Metraż:</div><div>{offer.area} m²</div>
-                <div className="font-semibold text-zinc-600">Pokoje:</div><div>{offer.rooms}</div>
-                <div className="font-semibold text-zinc-600">Piętro:</div><div>{offer.floor}</div>
+            {/* OPIS */}
+            <div className="w-full md:w-1/2 p-6 md:p-8 overflow-y-auto bg-white">
+              <div className="flex items-center gap-2">
+                <Badge>{offer.type || "Brak informacji"}</Badge>
+                {offer.featured ? <Badge variant="secondary">Polecane</Badge> : null}
               </div>
 
-              <p className="mt-6 text-zinc-700 leading-relaxed border-t pt-6">
-                {offer.description || "Szczegółowy opis nieruchomości."}
-              </p>
+              <h2 className="text-3xl font-bold mt-2">{offer.title || "Brak tytułu"}</h2>
+              <div className="flex items-center gap-2 text-zinc-500 mt-1">
+                <Icon name="MapPin" /> {offer.city || "Brak informacji"}
+              </div>
+
+              <div className="text-4xl font-bold my-6">
+                {Number.isFinite(Number(offer.price)) ? currency(Number(offer.price)) : "Brak informacji"}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t pt-6">
+                <Field label="Metraż" value={Number.isFinite(Number(offer.area)) ? `${offer.area} m²` : "Brak informacji"} />
+                <Field label="Liczba pokoi" value={Number.isFinite(Number(offer.rooms)) ? String(offer.rooms) : "Brak informacji"} />
+                <Field label="Piętro" value={safeFloor(offer.floor)} />
+                <Field label="Czynsz" value={infoOr(offer.rent)} />
+                <Field label="Rynek" value={infoOr(offer.market)} />
+                <Field label="Stan wykończenia" value={infoOr(offer.finish)} />
+                <Field label="Ogrzewanie" value={infoOr(offer.heating)} />
+                <Field label="Forma własności" value={infoOr(offer.ownership)} />
+              </div>
+
+              <div className="mt-6 border-t pt-6">
+                <div className="text-sm font-semibold text-zinc-600">Opis</div>
+                <p className="mt-2 text-zinc-700 leading-relaxed whitespace-pre-line">
+                  {offer.description ? offer.description : "Brak informacji"}
+                </p>
+              </div>
+
+              {total > 1 && (
+                <div className="mt-6 text-xs text-zinc-500">
+                  Tip: możesz przewijać zdjęcia strzałkami na klawiaturze (← / →) lub przesunięciem palca.
+                </div>
+              )}
             </div>
           </div>
         </div>
