@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ✅ na Railway ustawisz MONGODB_URI w Variables
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGO_URI = process.env.MONGO_URI;
 
 // Zdjęcia są base64 -> requesty potrafią być duże
 app.use(express.json({ limit: "80mb" }));
@@ -15,16 +15,16 @@ app.use(express.json({ limit: "80mb" }));
 app.use(express.static(__dirname, { extensions: ["html"] }));
 
 // ---------- Mongo / Mongoose ----------
-if (!MONGODB_URI) {
-  console.error("❌ Brak MONGODB_URI w env (Railway Variables).");
+if (!MONGO_URI) {
+  console.error("❌ Brak MONGO_URI w env (Railway Variables).");
 }
 
 mongoose
-  .connect(MONGODB_URI || "mongodb://127.0.0.1:27017/centrum", {
+  .connect(MONGO_URI || "mongo://127.0.0.1:27017/centrum", {
     // mongoose 8 nie wymaga extra opcji
   })
   .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB connect error:", err.message));
+  .catch((err) => console.error("❌ Mongo connect error:", err.message));
 
 const ListingSchema = new mongoose.Schema(
   {
