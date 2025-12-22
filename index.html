@@ -31,7 +31,6 @@
       --shadow-card: 0 18px 60px -40px rgba(2,6,23,.30);
     }
 
-    /* CTA z linią */
     .line-button {
       align-items: center; background-color: #2563eb; color: #fff; cursor: pointer; display: inline-flex;
       font-family: ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
@@ -93,9 +92,7 @@
       letter-spacing: -0.02em;
     }
 
-    .section {
-      scroll-margin-top: 96px;
-    }
+    .section { scroll-margin-top: 96px; }
 
     .skeleton {
       background: linear-gradient(90deg, rgba(226,232,240,.55), rgba(226,232,240,.95), rgba(226,232,240,.55));
@@ -103,7 +100,6 @@
       animation: shimmer 1.2s ease-in-out infinite;
     }
 
-    /* Drobne poprawki responsywności (żeby nie ucinało na telefonach) */
     img, iframe { max-width: 100%; }
     .safe-container { width: 100%; overflow-x: clip; }
 
@@ -160,9 +156,7 @@
       useEffect(() => {
         const els = Array.from(document.querySelectorAll("[data-reveal]"));
         const io = new IntersectionObserver((entries) => {
-          entries.forEach((e) => {
-            if (e.isIntersecting) e.target.classList.add("animate-fade-up");
-          });
+          entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("animate-fade-up"); });
         }, { threshold: 0.12 });
         els.forEach((el) => io.observe(el));
         return () => io.disconnect();
@@ -192,7 +186,6 @@
         ChevronRight: <path d="m9 18 6-6-6-6" />,
         Facebook: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />,
         Instagram: <><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></>,
-        /* Prosta ikonka TikTok (stylizowana) */
         TikTok: <>
           <path d="M14 3v10.5a3.5 3.5 0 1 1-3-3.46" />
           <path d="M14 3c1.3 2.9 3.2 4.7 6 5v3c-2.9-.2-5.1-1.4-6-3" />
@@ -339,7 +332,6 @@
         testimonials: "Opinie klientów",
         contact: "Kontakt",
         allOffers: "Wszystkie Oferty",
-        /* USUNIĘTO 'Wynajem' z góry strony */
         trust: ["Sprzedaż", "Zakup", "Pełna obsługa"],
         form: { name: "Imię i nazwisko", email: "Email", msg: "Wiadomość", send: "Wyślij", phone: "Numer telefonu", subject: "Temat wiadomości", consent: "Wyrażam zgodę na przetwarzanie moich danych osobowych." },
       },
@@ -733,7 +725,6 @@
               </div>
             </div>
 
-            {/* Responsywne ułożenie zdjęć (bez ucinania) */}
             <div className="flex flex-wrap justify-center items-end gap-4 sm:gap-6">
               <div className="relative transition-transform duration-300 hover:scale-[1.02] w-[46%] sm:w-[30%] max-w-[260px]">
                 <img src="https://i.imgur.com/g9YnvTq.png" alt="Marcin Zacharski" className="w-full aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
@@ -767,20 +758,13 @@
             <div className="rounded-[2rem] glass border shadow-[var(--shadow-soft)] overflow-hidden">
               <div className="p-8 md:p-12 grid md:grid-cols-2 gap-10 items-center">
                 <div>
-                  <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">
-                    {t.testimonials}
-                  </h3>
+                  <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">{t.testimonials}</h3>
                   <p className="mt-3 text-zinc-600 leading-relaxed">
                     Opinie dostępne są bezpośrednio na Facebooku — kliknij i sprawdź recenzje klientów.
                   </p>
 
                   <div className="mt-7 flex flex-wrap gap-3">
-                    <a
-                      href={FB_REVIEWS_URL}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="line-button"
-                    >
+                    <a href={FB_REVIEWS_URL} target="_blank" rel="noreferrer" className="line-button">
                       Zobacz nasze opinie
                     </a>
 
@@ -794,9 +778,7 @@
                     </Button>
                   </div>
 
-                  <div className="mt-6 text-xs text-zinc-500">
-                    * Opinie otwierają się w serwisie Facebook.
-                  </div>
+                  <div className="mt-6 text-xs text-zinc-500">* Opinie otwierają się w serwisie Facebook.</div>
                 </div>
 
                 <div className="relative">
@@ -814,9 +796,7 @@
                       </div>
                       <div>
                         <div className="font-semibold">Opinie klientów</div>
-                        <div className="text-sm text-zinc-500">
-                          Kliknij, aby zobaczyć recenzje na Facebooku
-                        </div>
+                        <div className="text-sm text-zinc-500">Kliknij, aby zobaczyć recenzje na Facebooku</div>
                       </div>
                     </div>
 
@@ -824,9 +804,7 @@
                       {Array.from({ length: 6 }).map((_, i) => (
                         <div key={i} className="rounded-2xl border bg-white/60 p-4">
                           <div className="flex gap-1 text-blue-600">
-                            {Array.from({ length: 5 }).map((__, s) => (
-                              <span key={s}>★</span>
-                            ))}
+                            {Array.from({ length: 5 }).map((__, s) => (<span key={s}>★</span>))}
                           </div>
                           <div className="mt-3 h-2 w-full rounded bg-zinc-200/70" />
                           <div className="mt-2 h-2 w-4/5 rounded bg-zinc-200/70" />
@@ -879,36 +857,17 @@
                   <span className="font-medium">ul. Starzyńskiego 3, Słupsk</span>
                 </div>
 
-                {/* LINKI SOCIAL MEDIA (FB/IG/TikTok) */}
                 <div className="flex items-center justify-center md:justify-start gap-3 text-zinc-600 mt-5">
-                  <a
-                    className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors"
-                    href={SOCIALS.facebook}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Facebook"
-                    title="Facebook"
-                  >
+                  <a className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors"
+                     href={SOCIALS.facebook} target="_blank" rel="noreferrer" aria-label="Facebook" title="Facebook">
                     <Icon name="Facebook"/>
                   </a>
-                  <a
-                    className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors"
-                    href={SOCIALS.instagram}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Instagram"
-                    title="Instagram"
-                  >
+                  <a className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors"
+                     href={SOCIALS.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" title="Instagram">
                     <Icon name="Instagram"/>
                   </a>
-                  <a
-                    className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors"
-                    href={SOCIALS.tiktok}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="TikTok"
-                    title="TikTok"
-                  >
+                  <a className="h-10 w-10 rounded-2xl border bg-white/60 flex items-center justify-center hover:bg-white/80 transition-colors"
+                     href={SOCIALS.tiktok} target="_blank" rel="noreferrer" aria-label="TikTok" title="TikTok">
                     <Icon name="TikTok"/>
                   </a>
                 </div>
@@ -955,9 +914,7 @@
                     <Button type="submit" className="w-full rounded-2xl hover-lift" disabled={!allValid}>
                       {t.form.send}
                     </Button>
-                    <div className="text-xs text-zinc-500 text-center">
-                      Wysyłka w tej wersji jest demo (bez backendu).
-                    </div>
+                    <div className="text-xs text-zinc-500 text-center">Wysyłka w tej wersji jest demo (bez backendu).</div>
                   </form>
                 )}
               </CardContent>
@@ -967,39 +924,119 @@
       );
     }
 
+    /**
+     * ✅ NAPRAWA SUWAKÓW NA TELEFONACH:
+     * - obsługa Pointer Events (działa dla touch + mouse)
+     * - fallback na Touch Events gdy przeglądarka nie wspiera pointerów
+     * - capture pointera + blokada scrolla podczas przeciągania (preventDefault)
+     */
     function Slider({ className, min = 0, max = 100, step = 1, defaultValue = [0, 100], onValueChange }) {
       const [values, setValues] = useState(defaultValue);
       const rangeRef = useRef(null);
+      const activeThumb = useRef(null);
+
       useEffect(() => { setValues(defaultValue); }, [defaultValue]);
 
-      const onMoveAt = (clientX, thumbIndex) => {
-        if (!rangeRef.current) return;
+      const toValueFromClientX = (clientX) => {
+        if (!rangeRef.current) return values[0];
         const rect = rangeRef.current.getBoundingClientRect();
         const percent = clamp((clientX - rect.left) / rect.width, 0, 1);
-        const newValue = Math.round((min + percent * (max - min)) / step) * step;
-        const next = [...values];
-        if (thumbIndex === 0) next[0] = Math.min(newValue, values[1] - step);
-        else next[1] = Math.max(newValue, values[0] + step);
-        setValues(next);
-        onValueChange && onValueChange(next);
+        return Math.round((min + percent * (max - min)) / step) * step;
       };
 
-      const handleDown = (thumbIndex) => (e) => {
-        const move = (m) => onMoveAt(m.clientX, thumbIndex);
-        const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
-        document.addEventListener('mousemove', move);
-        document.addEventListener('mouseup', up);
+      const applyAt = (clientX, thumbIndex) => {
+        const newValue = toValueFromClientX(clientX);
+        setValues((prev) => {
+          const next = [...prev];
+          if (thumbIndex === 0) next[0] = Math.min(newValue, prev[1] - step);
+          else next[1] = Math.max(newValue, prev[0] + step);
+          onValueChange && onValueChange(next);
+          return next;
+        });
       };
+
+      const startDrag = (thumbIndex) => (e) => {
+        activeThumb.current = thumbIndex;
+
+        // Pointer events (najlepsze)
+        if (e?.pointerId != null && e.currentTarget?.setPointerCapture) {
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+        }
+
+        // ustaw od razu wartość pod palcem/myszą
+        const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+        if (clientX != null) applyAt(clientX, thumbIndex);
+      };
+
+      const onMove = (e) => {
+        if (activeThumb.current == null) return;
+        // blokuj scroll strony podczas przeciągania
+        if (e.cancelable) e.preventDefault();
+
+        const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+        if (clientX == null) return;
+        applyAt(clientX, activeThumb.current);
+      };
+
+      const endDrag = () => { activeThumb.current = null; };
 
       const left = ((values[0] - min) / (max - min)) * 100;
       const right = ((values[1] - min) / (max - min)) * 100;
 
+      // kliknięcie na track: ustaw bliższy suwak
+      const onTrackDown = (e) => {
+        const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+        if (clientX == null) return;
+        const val = toValueFromClientX(clientX);
+        const distL = Math.abs(val - values[0]);
+        const distR = Math.abs(val - values[1]);
+        const thumb = distL <= distR ? 0 : 1;
+        activeThumb.current = thumb;
+        if (e.cancelable) e.preventDefault();
+        applyAt(clientX, thumb);
+      };
+
       return (
-        <div ref={rangeRef} className={cn("relative flex items-center select-none touch-none w-full h-6 cursor-pointer", className)}>
-          <div className="relative w-full h-1.5 bg-zinc-200 rounded-full">
+        <div
+          ref={rangeRef}
+          className={cn("relative flex items-center select-none w-full h-8", className)}
+          style={{ touchAction: "none" }}   /* kluczowe dla mobile */
+          onPointerMove={onMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onMouseMove={onMove}
+          onMouseUp={endDrag}
+          onTouchMove={onMove}
+          onTouchEnd={endDrag}
+          onTouchCancel={endDrag}
+        >
+          <div
+            className="relative w-full h-2 bg-zinc-200 rounded-full cursor-pointer"
+            onPointerDown={onTrackDown}
+            onMouseDown={onTrackDown}
+            onTouchStart={onTrackDown}
+          >
             <div className="absolute h-full bg-blue-600 rounded-full" style={{ left: `${left}%`, right: `${100 - right}%` }} />
-            <div onMouseDown={handleDown(0)} className="absolute w-5 h-5 bg-white border-2 border-blue-600 rounded-full -top-2 transform -translate-x-1/2 shadow" style={{ left: `${left}%` }} />
-            <div onMouseDown={handleDown(1)} className="absolute w-5 h-5 bg-white border-2 border-blue-600 rounded-full -top-2 transform -translate-x-1/2 shadow" style={{ left: `${right}%` }} />
+
+            <div
+              role="slider"
+              aria-label="Minimum"
+              className="absolute w-7 h-7 bg-white border-2 border-blue-600 rounded-full -top-2.5 transform -translate-x-1/2 shadow cursor-grab active:cursor-grabbing"
+              style={{ left: `${left}%` }}
+              onPointerDown={startDrag(0)}
+              onMouseDown={startDrag(0)}
+              onTouchStart={startDrag(0)}
+            />
+
+            <div
+              role="slider"
+              aria-label="Maksimum"
+              className="absolute w-7 h-7 bg-white border-2 border-blue-600 rounded-full -top-2.5 transform -translate-x-1/2 shadow cursor-grab active:cursor-grabbing"
+              style={{ left: `${right}%` }}
+              onPointerDown={startDrag(1)}
+              onMouseDown={startDrag(1)}
+              onTouchStart={startDrag(1)}
+            />
           </div>
         </div>
       );
@@ -1074,7 +1111,6 @@
               </div>
             </div>
 
-            {/* Responsywne filtry (na mobile nie ucina) */}
             <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-3 p-4 rounded-[1.6rem] glass shadow-[var(--shadow-soft)] sticky top-[86px] z-20">
               <div className="md:col-span-3">
                 <Input placeholder="Szukaj..." value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
@@ -1367,7 +1403,6 @@
       );
     }
 
-    /* FOOTER: usunięto "Polityka prywatności" i "RODO" */
     function Footer() {
       return (
         <footer className="py-10 border-t glass">
