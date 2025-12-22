@@ -51,12 +51,15 @@
     // === API ===
     const API_BASE = ""; // ten sam origin
     const API_LISTINGS = API_BASE + "/api/listings";
+    const API_ADMIN_ME = API_BASE + "/api/admin/me";
+    const API_ADMIN_LOGIN = API_BASE + "/api/admin/login";
+    const API_ADMIN_LOGOUT = API_BASE + "/api/admin/logout";
 
     const cn = (...c) => c.filter(Boolean).join(" ");
     const currency = (n) => new Intl.NumberFormat("pl-PL", { style: "currency", currency: "PLN", maximumFractionDigits: 0 }).format(Number(n || 0));
 
     async function apiGet(url) {
-      const r = await fetch(url, { headers: { "Accept": "application/json" } });
+      const r = await fetch(url, { headers: { "Accept": "application/json" }, credentials: "include" });
       if (!r.ok) throw new Error("GET failed: " + r.status);
       return r.json();
     }
@@ -64,6 +67,7 @@
       const r = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data)
       });
       if (!r.ok) {
@@ -76,6 +80,7 @@
       const r = await fetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data)
       });
       if (!r.ok) {
@@ -85,7 +90,7 @@
       return r.json();
     }
     async function apiDelete(url) {
-      const r = await fetch(url, { method: "DELETE", headers: { "Accept": "application/json" } });
+      const r = await fetch(url, { method: "DELETE", headers: { "Accept": "application/json" }, credentials: "include" });
       if (!r.ok) {
         const msg = await safeReadError(r);
         throw new Error(msg || ("DELETE failed: " + r.status));
@@ -140,7 +145,6 @@
     );
 
     function Modal({ children, onClose }){
-      // onMouseDown zamiast onClick -> unikamy natychmiastowego zamknięcia przez bubbling
       return (
         <div className="fixed inset-0 z-[100] bg-black/55 backdrop-blur-sm" onMouseDown={onClose}>
           <div
@@ -157,8 +161,117 @@
       );
     }
 
-    // === App ===
-    function App(){
+    // === Login gate ===
+    function PinLogin({ onAuthed }){
+      const [pin, setPin] = useState("");
+      const [busy, setBusy] = useState(false);
+      const [err, setErr] = useState("");
+
+      const inputRef = useRef(null);
+
+      useEffect(() => {
+        inputRef.current?.focus();
+      }, []);
+
+      const onChange = (v) => {
+        // tylko cyfry, max 5
+        const cleaned = String(v).replace(/\D/g, "").slice(0, 5);
+        setPin(cleaned);
+        setErr("");
+      };
+
+      const submit = async (e) => {
+        e.preventDefault();
+        setErr("");
+        if (pin.length !== 5) { setErr("Wpisz 5 cyfr."); return; }
+        setBusy(true);
+        try {
+          await apiPost(API_ADMIN_LOGIN, { pin });
+          onAuthed();
+        } catch (e) {
+          const msg = String(e.message || e);
+          if (msg.includes("PIN_WRONG")) setErr("Błędny PIN.");
+          else if (msg.includes("ADMIN_PIN_NOT_SET")) setErr("Brak ADMIN_PIN na serwerze.");
+          else if (msg.includes("ADMIN_SECRET_NOT_SET")) setErr("Brak ADMIN_SECRET na serwerze.");
+          else setErr("Nie udało się zalogować.");
+        } finally {
+          setBusy(false);
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <div className="w-full max-w-md glass rounded-3xl shadow-[var(--shadow-soft)] p-6 border">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg">A</div>
+              <div>
+                <div className="text-xl font-semibold">Panel admina</div>
+                <div className="text-sm text-zinc-600">Zaloguj się PIN-em</div>
+              </div>
+            </div>
+
+            <form className="mt-6 space-y-3" onSubmit={submit}>
+              <label className="text-xs text-zinc-500">PIN (5 cyfr)</label>
+              <Input
+                ref={inputRef}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="•••••"
+                value={pin}
+                onChange={(e)=>onChange(e.target.value)}
+              />
+
+              {err && <div className="text-sm text-red-600">{err}</div>}
+
+              <Button type="submit" className="w-full" disabled={busy}>
+                {busy ? "Logowanie..." : "Zaloguj"}
+              </Button>
+
+              <div className="text-xs text-zinc-500 text-center">
+                Dostęp chroniony PIN-em z Railway Variables.
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // === App shell (auth + admin) ===
+    function Root(){
+      const [checking, setChecking] = useState(true);
+      const [authed, setAuthed] = useState(false);
+
+      const check = async () => {
+        setChecking(true);
+        try {
+          const me = await apiGet(API_ADMIN_ME);
+          setAuthed(!!me?.authed);
+        } catch {
+          setAuthed(false);
+        } finally {
+          setChecking(false);
+        }
+      };
+
+      useEffect(() => { check(); }, []);
+
+      if (checking) {
+        return (
+          <div className="min-h-screen flex items-center justify-center text-zinc-600">
+            Sprawdzanie dostępu...
+          </div>
+        );
+      }
+
+      if (!authed) {
+        return <PinLogin onAuthed={check} />;
+      }
+
+      return <App onLogout={async () => { await apiPost(API_ADMIN_LOGOUT, {}); await check(); }} />;
+    }
+
+    // === Admin App ===
+    function App({ onLogout }){
       const [items, setItems] = useState([]);
       const [loading, setLoading] = useState(true);
       const [error, setError] = useState("");
@@ -221,6 +334,7 @@
                 <a href="./index.html" className="hidden sm:block">
                   <Button variant="outline">Otwórz stronę</Button>
                 </a>
+                <Button variant="outline" onClick={onLogout}>Wyloguj</Button>
                 <Button onClick={onCreate}>+ Dodaj ogłoszenie</Button>
               </div>
             </div>
@@ -337,7 +451,6 @@
       const [rooms, setRooms] = useState(initial?.rooms ?? 2);
       const [description, setDescription] = useState(initial?.description || "");
 
-      // opcjonalne
       const [rent, setRent] = useState(initial?.rent || "");
       const [market, setMarket] = useState(initial?.market || "");
       const [finish, setFinish] = useState(initial?.finish || "");
@@ -369,14 +482,10 @@
         if (!list.length) return;
 
         const remaining = 15 - images.length;
-        if (remaining <= 0) {
-          setImgError("Masz już 15 zdjęć.");
-          return;
-        }
+        if (remaining <= 0) { setImgError("Masz już 15 zdjęć."); return; }
 
         const take = list.slice(0, remaining);
 
-        // konwersja plik -> dataURL
         const toDataUrl = (file) => new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result));
@@ -388,20 +497,15 @@
         try {
           const converted = [];
           for (const f of take) {
-            // lekka walidacja typu
             if (!String(f.type || "").startsWith("image/")) continue;
             converted.push(await toDataUrl(f));
           }
-          if (!converted.length) {
-            setImgError("Nie wybrano poprawnych obrazów.");
-          } else {
-            setImages(prev => [...prev, ...converted].slice(0, 15));
-          }
-        } catch (e) {
+          if (!converted.length) setImgError("Nie wybrano poprawnych obrazów.");
+          else setImages(prev => [...prev, ...converted].slice(0, 15));
+        } catch {
           setImgError("Nie udało się wczytać zdjęć.");
         } finally {
           setBusyImages(false);
-          // ważne: reset inputa, żeby dało się wybrać te same pliki drugi raz
           if (fileInputRef.current) fileInputRef.current.value = "";
         }
       };
@@ -421,8 +525,6 @@
         if (!allValid) return;
 
         const payload = {
-          // przy edycji id i createdAt i tak są utrzymane po stronie serwera,
-          // ale tu trzymamy spójność
           id: initial?.id,
           createdAt: initial?.createdAt,
           title: title.trim(),
@@ -463,8 +565,7 @@
                   type="file"
                   accept="image/*"
                   multiple
-                  // ważne pod mobile (kamera/galeria)
-                  capture={false}
+                  capture="environment"
                   className="hidden"
                   onChange={(e)=>handleFiles(e.target.files)}
                 />
@@ -605,7 +706,7 @@
     }
 
     const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<App />);
+    root.render(<Root />);
   </script>
 </body>
 </html>
