@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin – Centrum nieruchomości</title>
 
+  <meta name="description" content="Panel administracyjny – zarządzanie ogłoszeniami." />
+  <link rel="icon" type="image" href="/favicon.png" />
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
@@ -43,26 +46,63 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useEffect, useMemo, useState } = React;
+    const { useEffect, useMemo, useRef, useState } = React;
 
-    const LS_KEY = "admin_listings_v1";
+    // === API ===
+    const API_BASE = ""; // ten sam origin
+    const API_LISTINGS = API_BASE + "/api/listings";
 
     const cn = (...c) => c.filter(Boolean).join(" ");
     const currency = (n) => new Intl.NumberFormat("pl-PL", { style: "currency", currency: "PLN", maximumFractionDigits: 0 }).format(Number(n || 0));
-    const uid = () => "a_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
 
-    function readListings(){
+    async function apiGet(url) {
+      const r = await fetch(url, { headers: { "Accept": "application/json" } });
+      if (!r.ok) throw new Error("GET failed: " + r.status);
+      return r.json();
+    }
+    async function apiPost(url, data) {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (!r.ok) {
+        const msg = await safeReadError(r);
+        throw new Error(msg || ("POST failed: " + r.status));
+      }
+      return r.json();
+    }
+    async function apiPut(url, data) {
+      const r = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (!r.ok) {
+        const msg = await safeReadError(r);
+        throw new Error(msg || ("PUT failed: " + r.status));
+      }
+      return r.json();
+    }
+    async function apiDelete(url) {
+      const r = await fetch(url, { method: "DELETE", headers: { "Accept": "application/json" } });
+      if (!r.ok) {
+        const msg = await safeReadError(r);
+        throw new Error(msg || ("DELETE failed: " + r.status));
+      }
+      return r.json();
+    }
+    async function safeReadError(r) {
       try {
-        const raw = localStorage.getItem(LS_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
-      } catch { return []; }
-    }
-    function writeListings(items){
-      try { localStorage.setItem(LS_KEY, JSON.stringify(items)); } catch {}
+        const j = await r.json();
+        return j?.error ? String(j.error) : JSON.stringify(j);
+      } catch {
+        try { return await r.text(); } catch { return ""; }
+      }
     }
 
-    const Button = ({ variant="default", className, ...props }) => {
+    // === UI primitives ===
+    const Button = ({ variant="default", className, children, type, ...props }) => {
       const variants = {
         default: "bg-blue-600 text-white hover:bg-blue-700",
         outline: "border border-zinc-200 bg-white/60 hover:bg-white",
@@ -72,43 +112,75 @@
       };
       return (
         <button
+          type={type || "button"}
           className={cn(
-            "h-10 px-4 rounded-2xl text-sm font-semibold transition-colors focus-ring active:translate-y-[1px]",
+            "h-10 px-4 rounded-2xl text-sm font-semibold transition-colors focus-ring active:translate-y-[1px] disabled:opacity-50 disabled:pointer-events-none",
             variants[variant],
             className
           )}
           {...props}
-        />
+        >
+          {children}
+        </button>
       );
     };
 
-    const Input = (props) => (
+    const Input = ({ className, ...props }) => (
       <input
         {...props}
-        className={cn(
-          "h-10 w-full rounded-2xl border border-zinc-200 bg-white/70 px-3 text-sm focus-ring",
-          props.className
-        )}
+        className={cn("h-10 w-full rounded-2xl border border-zinc-200 bg-white/70 px-3 text-sm focus-ring", className)}
       />
     );
 
-    const Textarea = (props) => (
+    const Textarea = ({ className, ...props }) => (
       <textarea
         {...props}
-        className={cn(
-          "min-h-[110px] w-full rounded-2xl border border-zinc-200 bg-white/70 px-3 py-2 text-sm focus-ring",
-          props.className
-        )}
+        className={cn("min-h-[110px] w-full rounded-2xl border border-zinc-200 bg-white/70 px-3 py-2 text-sm focus-ring", className)}
       />
     );
 
+    function Modal({ children, onClose }){
+      // onMouseDown zamiast onClick -> unikamy natychmiastowego zamknięcia przez bubbling
+      return (
+        <div className="fixed inset-0 z-[100] bg-black/55 backdrop-blur-sm" onMouseDown={onClose}>
+          <div
+            onMouseDown={(e)=>e.stopPropagation()}
+            className="max-w-4xl w-[95vw] max-h-[90vh] overflow-auto mx-auto mt-10 glass border rounded-3xl shadow-[var(--shadow-soft)] p-6"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-lg font-semibold">Ogłoszenie</div>
+              <Button variant="outline" onClick={onClose}>Zamknij</Button>
+            </div>
+            <div className="mt-4">{children}</div>
+          </div>
+        </div>
+      );
+    }
+
+    // === App ===
     function App(){
-      const [items, setItems] = useState(() => readListings());
-      const [open, setOpen] = useState(false);
-      const [editing, setEditing] = useState(null);
+      const [items, setItems] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState("");
       const [query, setQuery] = useState("");
 
-      useEffect(() => writeListings(items), [items]);
+      const [open, setOpen] = useState(false);
+      const [editing, setEditing] = useState(null);
+
+      const refresh = async () => {
+        setError("");
+        setLoading(true);
+        try {
+          const list = await apiGet(API_LISTINGS);
+          setItems(Array.isArray(list) ? list : []);
+        } catch (e) {
+          setError(String(e.message || e));
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => { refresh(); }, []);
 
       const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -122,9 +194,15 @@
 
       const onCreate = () => { setEditing(null); setOpen(true); };
       const onEdit = (it) => { setEditing(it); setOpen(true); };
-      const onDelete = (id) => {
+
+      const onDelete = async (id) => {
         if (!confirm("Na pewno usunąć ogłoszenie?")) return;
-        setItems(prev => prev.filter(x => x.id !== id));
+        try {
+          await apiDelete(API_LISTINGS + "/" + encodeURIComponent(id));
+          await refresh();
+        } catch (e) {
+          alert("Błąd usuwania: " + String(e.message || e));
+        }
       };
 
       return (
@@ -135,9 +213,10 @@
                 <div className="h-10 w-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold">A</div>
                 <div>
                   <div className="font-semibold tracking-tight">Panel admina</div>
-                  <div className="text-xs text-zinc-600">Centrum nieruchomości</div>
+                  <div className="text-xs text-zinc-600">Zarządzanie ogłoszeniami</div>
                 </div>
               </div>
+
               <div className="flex items-center gap-2">
                 <a href="./index.html" className="hidden sm:block">
                   <Button variant="outline">Otwórz stronę</Button>
@@ -148,65 +227,72 @@
           </header>
 
           <main className="max-w-7xl mx-auto px-4 py-8">
-            <div className="grid md:grid-cols-12 gap-3">
+            <div className="grid md:grid-cols-12 gap-3 items-center">
               <div className="md:col-span-6">
                 <Input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Szukaj po tytule / mieście / typie..." />
               </div>
               <div className="md:col-span-6 flex items-center justify-end gap-2">
-                <Button variant="secondary" onClick={() => {
-                  const json = localStorage.getItem(LS_KEY) || "[]";
-                  navigator.clipboard?.writeText(json);
-                  alert("Skopiowano JSON z ogłoszeniami do schowka.");
-                }}>
-                  Kopiuj JSON
-                </Button>
-                <Button variant="outline" onClick={() => {
-                  if (!confirm("To usunie wszystkie ogłoszenia z localStorage. Kontynuować?")) return;
-                  setItems([]);
-                }}>
-                  Wyczyść wszystko
+                <Button variant="secondary" onClick={refresh} disabled={loading}>
+                  {loading ? "Odświeżanie..." : "Odśwież"}
                 </Button>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              {filtered.map((it) => (
-                <div key={it.id} className="rounded-3xl glass border shadow-[var(--shadow-soft)] overflow-hidden">
-                  <div className="h-48 bg-black/5">
-                    {it.images?.[0] ? (
-                      <img src={it.images[0]} alt={it.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-500">Brak zdjęcia</div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="font-semibold">{it.title || "Oferta"}</div>
-                        <div className="text-sm text-zinc-600">{it.city} • {it.type}</div>
+            {error && (
+              <div className="mt-6 p-4 rounded-2xl bg-red-50 text-red-700 text-center border border-red-200">
+                {error}
+              </div>
+            )}
+
+            {loading && !error && (
+              <div className="mt-6 p-6 rounded-3xl glass border shadow-[var(--shadow-soft)] text-center text-zinc-600">
+                Ładowanie ogłoszeń...
+              </div>
+            )}
+
+            {!loading && !error && (
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {filtered.map((it) => (
+                  <div key={it.id} className="rounded-3xl glass border shadow-[var(--shadow-soft)] overflow-hidden">
+                    <div className="h-48 bg-black/5">
+                      {it.images?.[0] ? (
+                        <img src={it.images[0]} alt={it.title} className="w-full h-full object-cover" />
+                      ) : it.image ? (
+                        <img src={it.image} alt={it.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-500">Brak zdjęcia</div>
+                      )}
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-semibold">{it.title || "Oferta"}</div>
+                          <div className="text-sm text-zinc-600">{it.city} • {it.type}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold">{currency(it.price)}</div>
+                          <div className="text-xs text-zinc-500">{it.area} m² • {it.rooms} pok.</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold">{currency(it.price)}</div>
-                        <div className="text-xs text-zinc-500">{it.area} m² • {it.rooms} pok.</div>
+
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                        {it.featured && <span className="px-2 py-1 rounded-full bg-blue-600 text-white">Polecane</span>}
+                        {it.market && <span className="px-2 py-1 rounded-full bg-white/70 border">{it.market}</span>}
+                        {it.finish && <span className="px-2 py-1 rounded-full bg-white/70 border">{it.finish}</span>}
+                      </div>
+
+                      <div className="mt-4 flex gap-2">
+                        <Button className="w-1/2" variant="outline" onClick={() => onEdit(it)}>Edytuj</Button>
+                        <Button className="w-1/2" variant="destructive" onClick={() => onDelete(it.id)}>Usuń</Button>
                       </div>
                     </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                      {it.featured && <span className="px-2 py-1 rounded-full bg-blue-600 text-white">Polecane</span>}
-                      {it.market && <span className="px-2 py-1 rounded-full bg-white/70 border">{it.market}</span>}
-                      {it.finish && <span className="px-2 py-1 rounded-full bg-white/70 border">{it.finish}</span>}
-                    </div>
-
-                    <div className="mt-4 flex gap-2">
-                      <Button className="w-1/2" variant="outline" onClick={() => onEdit(it)}>Edytuj</Button>
-                      <Button className="w-1/2" variant="destructive" onClick={() => onDelete(it.id)}>Usuń</Button>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
-            {!filtered.length && (
+            {!loading && !error && !filtered.length && (
               <div className="mt-10 rounded-3xl glass border p-10 text-center shadow-[var(--shadow-soft)]">
                 <div className="text-xl font-semibold">Brak ogłoszeń</div>
                 <p className="mt-2 text-zinc-600">Kliknij „Dodaj ogłoszenie”, aby dodać pierwszą ofertę.</p>
@@ -220,13 +306,18 @@
               <ListingForm
                 initial={editing}
                 onCancel={() => setOpen(false)}
-                onSave={(payload) => {
-                  if (editing) {
-                    setItems(prev => prev.map(x => x.id === editing.id ? payload : x));
-                  } else {
-                    setItems(prev => [payload, ...prev]);
+                onSave={async (payload) => {
+                  try {
+                    if (editing?.id) {
+                      await apiPut(API_LISTINGS + "/" + encodeURIComponent(editing.id), payload);
+                    } else {
+                      await apiPost(API_LISTINGS, payload);
+                    }
+                    setOpen(false);
+                    await refresh();
+                  } catch (e) {
+                    alert("Błąd zapisu: " + String(e.message || e));
                   }
-                  setOpen(false);
                 }}
               />
             </Modal>
@@ -235,27 +326,15 @@
       );
     }
 
-    function Modal({ children, onClose }){
-      return (
-        <div className="fixed inset-0 z-[100] bg-black/55 backdrop-blur-sm" onClick={onClose}>
-          <div onClick={(e)=>e.stopPropagation()} className="max-w-4xl w-[95vw] max-h-[90vh] overflow-auto mx-auto mt-10 glass border rounded-3xl shadow-[var(--shadow-soft)] p-6">
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-lg font-semibold">Ogłoszenie</div>
-              <Button variant="outline" onClick={onClose}>Zamknij</Button>
-            </div>
-            <div className="mt-4">{children}</div>
-          </div>
-        </div>
-      );
-    }
-
     function ListingForm({ initial, onSave, onCancel }){
+      const fileInputRef = useRef(null);
+
       const [title, setTitle] = useState(initial?.title || "");
+      const [type, setType] = useState(initial?.type || "Mieszkanie");
+      const [city, setCity] = useState(initial?.city || "");
       const [price, setPrice] = useState(initial?.price ?? 300000);
       const [area, setArea] = useState(initial?.area ?? 50);
       const [rooms, setRooms] = useState(initial?.rooms ?? 2);
-      const [city, setCity] = useState(initial?.city || "");
-      const [type, setType] = useState(initial?.type || "Mieszkanie");
       const [description, setDescription] = useState(initial?.description || "");
 
       // opcjonalne
@@ -267,27 +346,37 @@
       const [ownership, setOwnership] = useState(initial?.ownership || "");
       const [featured, setFeatured] = useState(!!initial?.featured);
 
-      const [images, setImages] = useState(Array.isArray(initial?.images) ? initial.images : []);
+      const [images, setImages] = useState(Array.isArray(initial?.images) ? initial.images : (initial?.image ? [initial.image] : []));
       const [imgError, setImgError] = useState("");
+      const [busyImages, setBusyImages] = useState(false);
 
       const allValid =
-        (title.trim().length >= 3) &&
-        (city.trim().length >= 2) &&
-        (Number(price) > 0) &&
-        (Number(area) > 0) &&
-        (Number(rooms) > 0) &&
-        (description.trim().length >= 10);
+        title.trim().length >= 3 &&
+        city.trim().length >= 2 &&
+        Number(price) > 0 &&
+        Number(area) > 0 &&
+        Number(rooms) > 0 &&
+        description.trim().length >= 10;
 
-      const handleFiles = async (fileList) => {
+      const pickImages = () => {
         setImgError("");
-        const list = Array.from(fileList || []);
+        fileInputRef.current?.click();
+      };
+
+      const handleFiles = async (files) => {
+        setImgError("");
+        const list = Array.from(files || []);
         if (!list.length) return;
 
         const remaining = 15 - images.length;
-        if (remaining <= 0) { setImgError("Masz już 15 zdjęć."); return; }
+        if (remaining <= 0) {
+          setImgError("Masz już 15 zdjęć.");
+          return;
+        }
 
         const take = list.slice(0, remaining);
 
+        // konwersja plik -> dataURL
         const toDataUrl = (file) => new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result));
@@ -295,47 +384,65 @@
           reader.readAsDataURL(file);
         });
 
+        setBusyImages(true);
         try {
           const converted = [];
-          for (const f of take) converted.push(await toDataUrl(f));
-          setImages(prev => [...prev, ...converted]);
-        } catch {
+          for (const f of take) {
+            // lekka walidacja typu
+            if (!String(f.type || "").startsWith("image/")) continue;
+            converted.push(await toDataUrl(f));
+          }
+          if (!converted.length) {
+            setImgError("Nie wybrano poprawnych obrazów.");
+          } else {
+            setImages(prev => [...prev, ...converted].slice(0, 15));
+          }
+        } catch (e) {
           setImgError("Nie udało się wczytać zdjęć.");
+        } finally {
+          setBusyImages(false);
+          // ważne: reset inputa, żeby dało się wybrać te same pliki drugi raz
+          if (fileInputRef.current) fileInputRef.current.value = "";
         }
       };
 
       const removeImage = (idx) => setImages(prev => prev.filter((_, i) => i !== idx));
+      const moveToCover = (idx) => {
+        setImages(prev => {
+          const copy = [...prev];
+          const [picked] = copy.splice(idx, 1);
+          copy.unshift(picked);
+          return copy;
+        });
+      };
 
       const submit = (e) => {
         e.preventDefault();
         if (!allValid) return;
 
-        const now = Date.now();
-
         const payload = {
-          id: initial?.id || uid(),
-          createdAt: initial?.createdAt || now,
-          updatedAt: now,
-
+          // przy edycji id i createdAt i tak są utrzymane po stronie serwera,
+          // ale tu trzymamy spójność
+          id: initial?.id,
+          createdAt: initial?.createdAt,
           title: title.trim(),
+          type: type.trim(),
+          city: city.trim(),
           price: Number(price),
           area: Number(area),
           rooms: Number(rooms),
-          city: city.trim(),
-          type: type.trim(),
           description: description.trim(),
 
-          // opcjonalne
           rent: rent ? String(rent).trim() : "",
           market: market ? String(market).trim() : "",
           finish: finish ? String(finish).trim() : "",
           floor: floor === "" ? null : (isNaN(Number(floor)) ? String(floor).trim() : Number(floor)),
           heating: heating ? String(heating).trim() : "",
           ownership: ownership ? String(ownership).trim() : "",
-          featured,
+          featured: !!featured,
 
           images: images.slice(0, 15),
-          image: (images[0] || ""),
+          image: String(images[0] || "")
         };
 
         onSave(payload);
@@ -344,13 +451,28 @@
       return (
         <form onSubmit={submit} className="grid md:grid-cols-2 gap-4">
           <div className="md:col-span-2 rounded-3xl border bg-white/60 p-4">
-            <div className="text-sm font-semibold mb-2">Zdjęcia (max 15) – pierwsze to okładka</div>
             <div className="flex items-center justify-between gap-3">
-              <label className="inline-flex items-center gap-2 cursor-pointer">
-                <input type="file" accept="image/*" multiple className="hidden" onChange={(e)=>handleFiles(e.target.files)} />
-                <Button type="button" variant="secondary">Dodaj zdjęcia</Button>
-              </label>
-              <div className="text-xs text-zinc-500">{images.length}/15</div>
+              <div>
+                <div className="text-sm font-semibold">Zdjęcia (max 15)</div>
+                <div className="text-xs text-zinc-500">Pierwsze zdjęcie to okładka. Kliknij miniaturę, aby ustawić jako okładkę.</div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  // ważne pod mobile (kamera/galeria)
+                  capture={false}
+                  className="hidden"
+                  onChange={(e)=>handleFiles(e.target.files)}
+                />
+                <Button type="button" variant="secondary" onClick={pickImages} disabled={busyImages || images.length >= 15}>
+                  {busyImages ? "Wczytywanie..." : "Dodaj zdjęcia"}
+                </Button>
+                <div className="text-xs text-zinc-500">{images.length}/15</div>
+              </div>
             </div>
 
             {imgError && <div className="mt-2 text-sm text-red-600">{imgError}</div>}
@@ -358,17 +480,25 @@
             {!!images.length && (
               <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-3">
                 {images.map((src, i) => (
-                  <div key={i} className="relative">
-                    <img src={src} alt={"img"+i} className="h-24 w-full object-cover rounded-2xl border" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(i)}
-                      className="absolute top-2 right-2 px-2 py-1 rounded-xl bg-white/90 border text-xs hover:bg-white focus-ring"
-                    >
-                      usuń
-                    </button>
+                  <button
+                    key={i}
+                    type="button"
+                    className="relative group rounded-2xl overflow-hidden border bg-white focus-ring"
+                    onClick={() => moveToCover(i)}
+                    title="Ustaw jako okładkę"
+                  >
+                    <img src={src} alt={"img"+i} className="h-24 w-full object-cover" />
                     {i === 0 && <div className="absolute left-2 bottom-2 text-[10px] px-2 py-1 rounded-full bg-black/70 text-white">Okładka</div>}
-                  </div>
+
+                    <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span
+                        className="inline-flex items-center justify-center px-2 py-1 rounded-xl bg-white/90 border text-xs hover:bg-white"
+                        onClick={(e) => { e.stopPropagation(); removeImage(i); }}
+                      >
+                        usuń
+                      </span>
+                    </span>
+                  </button>
                 ))}
               </div>
             )}
@@ -381,8 +511,11 @@
 
           <div>
             <label className="text-xs text-zinc-500">Typ</label>
-            <select className="h-10 w-full rounded-2xl border border-zinc-200 bg-white/70 px-3 text-sm focus-ring"
-              value={type} onChange={(e)=>setType(e.target.value)}>
+            <select
+              className="h-10 w-full rounded-2xl border border-zinc-200 bg-white/70 px-3 text-sm focus-ring"
+              value={type}
+              onChange={(e)=>setType(e.target.value)}
+            >
               <option>Mieszkanie</option>
               <option>Dom</option>
               <option>Działka</option>
@@ -401,7 +534,7 @@
               <Input type="number" value={price} onChange={(e)=>setPrice(e.target.value)} />
             </div>
             <div>
-              <label className="text-xs text-zinc-500">Metraż</label>
+              <label className="text-xs text-zinc-500">Metraż (m²)</label>
               <Input type="number" value={area} onChange={(e)=>setArea(e.target.value)} />
             </div>
             <div>
@@ -457,7 +590,7 @@
 
           <div className="md:col-span-2 flex items-center justify-end gap-2">
             <Button type="button" variant="outline" onClick={onCancel}>Anuluj</Button>
-            <Button type="submit" disabled={!allValid}>
+            <Button type="submit" disabled={!allValid || busyImages}>
               {initial ? "Zapisz zmiany" : "Dodaj ogłoszenie"}
             </Button>
           </div>
