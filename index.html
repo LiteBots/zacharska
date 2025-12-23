@@ -818,9 +818,12 @@
       );
     }
 
+    /* ===========================
+       ✅ ZMIANA: Contact -> FormSubmit
+       =========================== */
     function Contact({ t }) {
       const [state, setState] = useState({ name: "", email: "", phone: "", subject: "", msg: "", consent: false });
-      const [sent, setSent] = useState(false);
+
       const allValid =
         state.name.length > 2 &&
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.email) &&
@@ -883,35 +886,72 @@
             <Card className="rounded-[2rem] glass hover-lift shadow-[var(--shadow-soft)] border-zinc-200/70">
               <CardHeader><CardTitle>Formularz kontaktowy</CardTitle></CardHeader>
               <CardContent>
-                {sent ? (
-                  <div className="p-6 text-green-800 bg-green-50 rounded-2xl border border-green-200">
-                    Dziękujemy! Skontaktujemy się wkrótce.
+                <form
+                  className="space-y-3"
+                  action="https://formsubmit.co/centrumnieruchomoscikz@op.pl"
+                  method="POST"
+                >
+                  {/* FormSubmit config */}
+                  <input type="hidden" name="_subject" value="Nowa wiadomość — Centrum nieruchomości" />
+                  <input type="hidden" name="_template" value="table" />
+                  <input type="hidden" name="_captcha" value="false" />
+                  <input type="hidden" name="_next" value={window.location.origin + "/#/"} />
+
+                  <Input
+                    name="name"
+                    placeholder={t.form.name}
+                    value={state.name}
+                    onChange={(e) => setState({ ...state, name: e.target.value })}
+                    required
+                  />
+                  <Input
+                    name="email"
+                    placeholder={t.form.email}
+                    type="email"
+                    value={state.email}
+                    onChange={(e) => setState({ ...state, email: e.target.value })}
+                    required
+                  />
+                  <Input
+                    name="phone"
+                    placeholder={t.form.phone}
+                    type="tel"
+                    value={state.phone}
+                    onChange={(e) => setState({ ...state, phone: e.target.value })}
+                  />
+                  <Input
+                    name="subject"
+                    placeholder={t.form.subject}
+                    value={state.subject}
+                    onChange={(e) => setState({ ...state, subject: e.target.value })}
+                  />
+                  <Textarea
+                    name="message"
+                    placeholder={t.form.msg}
+                    value={state.msg}
+                    onChange={(e) => setState({ ...state, msg: e.target.value })}
+                    required
+                  />
+                  <div className="flex items-start gap-2 py-2">
+                    <input
+                      type="checkbox"
+                      id="consent"
+                      checked={state.consent}
+                      onChange={(e) => setState({...state, consent: e.target.checked})}
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      required
+                    />
+                    <label htmlFor="consent" className="text-sm text-zinc-600 leading-relaxed">{t.form.consent}</label>
                   </div>
-                ) : (
-                  <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (allValid) setSent(true); }}>
-                    <Input placeholder={t.form.name} value={state.name} onChange={(e) => setState({ ...state, name: e.target.value })} />
-                    <Input placeholder={t.form.email} type="email" value={state.email} onChange={(e) => setState({ ...state, email: e.target.value })} />
-                    <Input placeholder={t.form.phone} type="tel" value={state.phone} onChange={(e) => setState({ ...state, phone: e.target.value })} />
-                    <Input placeholder={t.form.subject} value={state.subject} onChange={(e) => setState({ ...state, subject: e.target.value })} />
-                    <Textarea placeholder={t.form.msg} value={state.msg} onChange={(e) => setState({ ...state, msg: e.target.value })} />
-                    <div className="flex items-start gap-2 py-2">
-                      <input
-                        type="checkbox"
-                        id="consent"
-                        checked={state.consent}
-                        onChange={(e) => setState({...state, consent: e.target.checked})}
-                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <label htmlFor="consent" className="text-sm text-zinc-600 leading-relaxed">{t.form.consent}</label>
-                    </div>
-                    <Button type="submit" className="w-full rounded-2xl hover-lift" disabled={!allValid}>
-                      {t.form.send}
-                    </Button>
-                    <div className="text-xs text-zinc-500 text-center">
-                      Wysyłka w tej wersji jest demo (bez backendu).
-                    </div>
-                  </form>
-                )}
+
+                  <Button type="submit" className="w-full rounded-2xl hover-lift" disabled={!allValid}>
+                    {t.form.send}
+                  </Button>
+
+                  <div className="text-xs text-zinc-500 text-center">
+                    Formularz wysyła wiadomość przez FormSubmit.
+                  </div>
+                </form>
               </CardContent>
             </Card>
           </div>
