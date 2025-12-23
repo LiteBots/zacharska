@@ -99,6 +99,9 @@
     img, iframe { max-width: 100%; }
     .safe-container { width: 100%; overflow-x: clip; }
 
+    /* ✅ lepsze kadrowanie portretów (często twarz jest wyżej) */
+    .portrait-img { object-position: 50% 18%; }
+
     @media (max-width: 640px) {
       .line-button { padding: .95rem 1.4rem; font-size: .95rem; }
       .section { scroll-margin-top: 86px; }
@@ -124,6 +127,13 @@
       facebook: "https://www.facebook.com/profile.php?id=61554638487302&locale=pl_PL",
       instagram: "https://www.instagram.com/centrumnieruchomoscizk/",
       tiktok: "https://www.tiktok.com/@centrum.nieruchom",
+    };
+
+    // ✅ nowe zdjęcia (imgur -> i.imgur.com)
+    const TEAM_PHOTOS = {
+      klaudia: "https://i.imgur.com/fBXGAkE.jpg",
+      marcin: "https://i.imgur.com/Nk3Wjco.jpg",
+      grazyna: "https://i.imgur.com/rJV3ztE.jpg",
     };
 
     const cn = (...classes) => classes.filter(Boolean).join(' ');
@@ -325,7 +335,16 @@
         heroCTA: "Zobacz oferty",
         shorts: "Video | Reels",
         about: "O nas",
-        story: "Łączymy ludzi z nieruchomościami — jasno, sprawnie i po ludzku. Doświadczeni doradcy, nowoczesne narzędzia i pełna transparentność.",
+        // ✅ podmieniona historia (Twoja treść)
+        story:
+`Od dwóch lat jesteśmy częścią słupskiego rynku nieruchomości jako Centrum Nieruchomości, które stawia na autentyczność, relacje i realne wsparcie klientów. To był czas intensywnej pracy, wyzwań, wzruszeń i sukcesów — ale przede wszystkim czas spełniania marzeń, krok po kroku.
+
+Od początku przyświecał nam jeden cel: robić to, co kochamy, i pozostać sobą każdego dnia. Wierzymy, że odwaga, konsekwencja i wiara w siebie potrafią zmienić więcej, niż się wydaje — i właśnie na tych wartościach budujemy naszą markę.
+
+Dzięki zaufaniu klientów oraz współpracy z doświadczonymi doradcami kredytowymi i kancelarią notarialną tworzymy zgrany zespół, który działa sprawnie, profesjonalnie i z pełnym zaangażowaniem. Każda transakcja to dla nas coś więcej niż formalność — to odpowiedzialność za ważny etap w czyimś życiu.
+
+Nie dążymy do perfekcji za wszelką cenę. Wierzymy, że prawdziwy sukces buduje serce, pasja i wiara w to, że wszystko jest możliwe.
+Dlatego każdego dnia pracujemy z energią, uśmiechem i pełnym oddaniem — dla Was.`,
         values: ["Zaufanie", "Profesjonalizm", "Doświadczenie", "Innowacja"],
         testimonials: "Opinie klientów",
         contact: "Kontakt",
@@ -340,7 +359,16 @@
         heroCTA: "See listings",
         shorts: "Video | Reels",
         about: "About us",
-        story: "We connect people with real estate — clearly, efficiently and with full transparency. Expert advisors and modern tools.",
+        // ✅ szybkie tłumaczenie, żeby EN nie zostało puste
+        story:
+`For two years we’ve been part of the Słupsk real estate market as Centrum Nieruchomości — focused on authenticity, relationships and real support for our clients. It has been a time of hard work, challenges, emotions and successes — above all, a time of making dreams come true, step by step.
+
+From the start, we had one goal: to do what we love and stay true to ourselves every day. We believe that courage, consistency and self-belief can change more than it seems — and these values are the foundation of our brand.
+
+Thanks to our clients’ trust and cooperation with experienced mortgage advisors and a notary office, we form a strong team that works efficiently, professionally and with full commitment. Every transaction is more than paperwork — it’s responsibility for an important chapter in someone’s life.
+
+We don’t chase perfection at all costs. We believe true success is built with heart, passion and faith that anything is possible.
+That’s why every day we work with energy, a smile and full dedication — for you.`,
         values: ["Trust", "Professionalism", "Experience", "Innovation"],
         testimonials: "Client reviews",
         contact: "Contact",
@@ -703,59 +731,112 @@
       );
     }
 
+    // ✅ ULEPSZONA SEKCJA O NAS: lepszy układ + nowe osoby/zdjęcia + nowa historia
     function About({ t }) {
+      const paragraphs = (t.story || "").split("\n\n").filter(Boolean);
+
+      const team = [
+        { name: "Marcin Zacharski", role: "Agent Nieruchomości", src: TEAM_PHOTOS.marcin, accent: "from-blue-600/25 via-indigo-600/10 to-transparent" },
+        { name: "Klaudia Zacharska", role: "Agentka Nieruchomości", src: TEAM_PHOTOS.klaudia, featured: true, accent: "from-blue-600/35 via-indigo-600/12 to-transparent" },
+        { name: "Grażyna Głowacka", role: "Biuro Obsługi", src: TEAM_PHOTOS.grazyna, accent: "from-blue-600/25 via-indigo-600/10 to-transparent" },
+      ];
+
+      const PersonCard = ({ person }) => (
+        <div
+          className={cn(
+            "relative rounded-[2rem] overflow-hidden border bg-white/60 shadow-[var(--shadow-soft)] hover-lift",
+            person.featured ? "md:-translate-y-2" : ""
+          )}
+        >
+          <div className={cn("absolute inset-0 bg-gradient-to-t", person.accent)} />
+          <img
+            src={person.src}
+            alt={person.name}
+            className={cn(
+              "w-full aspect-[3/4] object-cover portrait-img",
+              person.featured ? "scale-[1.02]" : ""
+            )}
+            loading="lazy"
+          />
+          <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/55 via-black/20 to-transparent">
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-white font-semibold text-base sm:text-lg truncate">{person.name}</div>
+                <div className="text-white/85 text-xs sm:text-sm truncate">{person.role}</div>
+              </div>
+              {person.featured ? (
+                <div className="shrink-0 rounded-full bg-white/15 border border-white/20 px-3 py-1 text-[11px] text-white/95 backdrop-blur">
+                  Zespół
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      );
+
       return (
         <section id="about" className="w-full py-16 sm:py-24 section" data-reveal>
-          <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-2 gap-12 items-center">
-            <div className="flex flex-col items-center text-center md:items-start md:text-left">
-              <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">{t.about}</h3>
-              <p className="text-zinc-600 mt-4 leading-relaxed">{t.story}</p>
+          <div className="mx-auto max-w-7xl px-4">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-start">
+              {/* Tekst */}
+              <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+                <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">{t.about}</h3>
 
-              <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
-                {t.values.map((v) => (
-                  <div key={v} className="rounded-2xl border glass p-4 text-center shadow-sm hover-lift">
-                    <Icon name="Star" className="mx-auto text-blue-600" />
-                    <div className="mt-1 text-sm font-semibold">{v}</div>
+                <div className="mt-5 w-full rounded-[2rem] glass border shadow-[var(--shadow-soft)] p-6 sm:p-7 text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-2xl bg-blue-600/10 border border-blue-200/40 flex items-center justify-center">
+                      <Icon name="Star" className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-zinc-900">Nasza historia</div>
+                      <div className="text-sm text-zinc-500">Poznaj nas bliżej</div>
+                    </div>
                   </div>
-                ))}
-              </div>
 
-              <div className="mt-10 w-full">
-                <h4 className="font-semibold mb-3">Nasza historia</h4>
-                <ol className="relative border-l border-zinc-200">
-                  {[2015, 2018, 2021, 2024].map((year) => (
-                    <li key={year} className="mb-6 ml-4">
-                      <div className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-blue-600 border border-white" />
-                      <time className="text-xs text-zinc-500">{year}</time>
-                      <p className="text-sm text-left text-zinc-700">Kluczowy kamień milowy – rozwój usług i zespołu.</p>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
+                  <div className="mt-5 space-y-4 text-zinc-700 leading-relaxed">
+                    {paragraphs.map((p, i) => (
+                      <p key={i} className="text-sm sm:text-base whitespace-pre-line">{p}</p>
+                    ))}
+                  </div>
 
-            <div className="flex flex-wrap justify-center items-end gap-4 sm:gap-6">
-              <div className="relative transition-transform duration-300 hover:scale-[1.02] w-[46%] sm:w-[30%] max-w-[260px]">
-                <img src="https://i.imgur.com/g9YnvTq.png" alt="Marcin Zacharski" className="w-full aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
-                <div className="absolute bottom-4 left-2 right-2 bg-blue-600 text-white px-3 py-2 rounded-full shadow-md text-center">
-                  <div className="text-xs sm:text-sm font-semibold">Marcin Zacharski</div>
-                  <div className="text-[10px] sm:text-xs font-light opacity-90">Agent Nieruchomości</div>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {t.values.map((v) => (
+                      <div key={v} className="rounded-full border bg-white/60 px-3 py-1 text-xs font-semibold text-zinc-700">
+                        {v}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="relative z-10 transition-transform duration-300 hover:scale-[1.02] w-[54%] sm:w-[34%] max-w-[290px]">
-                <img src="https://i.imgur.com/SKLVSRG.png" alt="Klaudia Zacharska" className="w-full aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
-              </div>
+              {/* Zespół */}
+              <div className="relative">
+                <div
+                  className="absolute -inset-4 rounded-[2.5rem] blur-2xl opacity-60"
+                  style={{
+                    background:
+                      "radial-gradient(700px 420px at 20% 10%, rgba(59,130,246,.30), transparent 60%), radial-gradient(600px 380px at 85% 0%, rgba(37,99,235,.22), transparent 55%), radial-gradient(900px 520px at 50% 100%, rgba(99,102,241,.14), transparent 55%)"
+                  }}
+                />
+                <div className="relative rounded-[2rem] glass border shadow-[var(--shadow-soft)] p-4 sm:p-5">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div>
+                      <div className="font-semibold text-zinc-900">Poznaj zespół</div>
+                      <div className="text-sm text-zinc-500">Wspieramy Cię na każdym etapie</div>
+                    </div>
+                    <Badge variant="secondary" className="rounded-full">Centrum Nieruchomości</Badge>
+                  </div>
 
-              <div className="relative transition-transform duration-300 hover:scale-[1.02] w-[46%] sm:w-[30%] max-w-[260px]">
-                <img src="https://i.imgur.com/hnJemut.png" alt="Klaudia Zacharska" className="w-full aspect-[9/16] object-cover rounded-2xl shadow-[var(--shadow-soft)] border-4 border-white"/>
-                <div className="absolute bottom-4 left-2 right-2 bg-blue-600 text-white px-3 py-2 rounded-full shadow-md text-center">
-                  <div className="text-xs sm:text-sm font-semibold">Klaudia Zacharska</div>
-                  <div className="text-[10px] sm:text-xs font-light opacity-90">Agentka Nieruchomości</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {team.map((person) => <PersonCard key={person.name} person={person} />)}
+                  </div>
+
+                  <div className="mt-5 rounded-2xl border bg-white/60 p-4 text-sm text-zinc-600">
+                    Chcesz porozmawiać o sprzedaży lub zakupie? Napisz do nas — odpowiemy jeszcze dziś.
+                  </div>
                 </div>
               </div>
             </div>
-
           </div>
         </section>
       );
