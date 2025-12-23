@@ -335,7 +335,6 @@
         heroCTA: "Zobacz oferty",
         shorts: "Video | Reels",
         about: "O nas",
-        // ✅ podmieniona historia (Twoja treść)
         story:
 `Od dwóch lat jesteśmy częścią słupskiego rynku nieruchomości jako Centrum Nieruchomości, które stawia na autentyczność, relacje i realne wsparcie klientów. To był czas intensywnej pracy, wyzwań, wzruszeń i sukcesów — ale przede wszystkim czas spełniania marzeń, krok po kroku.
 
@@ -349,7 +348,7 @@ Dlatego każdego dnia pracujemy z energią, uśmiechem i pełnym oddaniem — dl
         testimonials: "Opinie klientów",
         contact: "Kontakt",
         allOffers: "Wszystkie Oferty",
-        trust: ["Sprzedaż", "Zakup", "Pełna obsługa"], // ✅ bez “Wynajem”
+        trust: ["Sprzedaż", "Zakup", "Pełna obsługa"],
         form: { name: "Imię i nazwisko", email: "Email", msg: "Wiadomość", send: "Wyślij", phone: "Numer telefonu", subject: "Temat wiadomości", consent: "Wyrażam zgodę na przetwarzanie moich danych osobowych." },
       },
       en: {
@@ -359,7 +358,6 @@ Dlatego każdego dnia pracujemy z energią, uśmiechem i pełnym oddaniem — dl
         heroCTA: "See listings",
         shorts: "Video | Reels",
         about: "About us",
-        // ✅ szybkie tłumaczenie, żeby EN nie zostało puste
         story:
 `For two years we’ve been part of the Słupsk real estate market as Centrum Nieruchomości — focused on authenticity, relationships and real support for our clients. It has been a time of hard work, challenges, emotions and successes — above all, a time of making dreams come true, step by step.
 
@@ -670,7 +668,6 @@ That’s why every day we work with energy, a smile and full dedication — for 
       );
     }
 
-    /* ✅ REELS: bez telefonu, 5 miejsc, poziomo */
     function Shorts({ t }) {
       const reels = useMemo(() => {
         const base = Array.isArray(FACEBOOK_REELS) ? FACEBOOK_REELS : [];
@@ -731,7 +728,11 @@ That’s why every day we work with energy, a smile and full dedication — for 
       );
     }
 
-    // ✅ ULEPSZONA SEKCJA O NAS: karty zespołu bez przycinania imienia/stanowiska
+    /**
+     * ✅ ZMIANA, O KTÓRĄ PROSIŁEŚ:
+     * - Kafelki zespołu są WYRAŹNIE większe (większa wysokość zdjęcia + większy padding + większa czcionka)
+     * - Na dużych ekranach jest 2 kolumny (kafelki szersze), a dopiero na XL wraca 3 kolumny
+     */
     function About({ t }) {
       const paragraphs = (t.story || "").split("\n\n").filter(Boolean);
 
@@ -745,34 +746,37 @@ That’s why every day we work with energy, a smile and full dedication — for 
         <div
           className={cn(
             "relative rounded-[2rem] overflow-hidden border bg-white/60 shadow-[var(--shadow-soft)] hover-lift",
+            "min-h-[460px] sm:min-h-[520px]",   /* ✅ większy kafelek */
             person.featured ? "md:-translate-y-2" : ""
           )}
         >
           <div className={cn("absolute inset-0 bg-gradient-to-t", person.accent)} />
 
+          {/* ✅ zamiast aspectRatio: stała większa wysokość */}
           <img
             src={person.src}
             alt={person.name}
             className={cn(
-              "w-full aspect-[3/4] object-cover portrait-img",
+              "w-full h-[460px] sm:h-[520px] object-cover portrait-img",
               person.featured ? "scale-[1.02]" : ""
             )}
             loading="lazy"
           />
 
-          {/* ✅ WIĘKSZY overlay + BRAK truncate + ZAWIJANIE */}
-          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 bg-gradient-to-t from-black/65 via-black/25 to-transparent">
-            <div className="flex items-end justify-between gap-3">
+          {/* ✅ większy overlay + większa czcionka */}
+          <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7 bg-gradient-to-t from-black/70 via-black/25 to-transparent">
+            <div className="flex items-end justify-between gap-4">
               <div className="min-w-0">
-                <div className="text-white font-semibold text-base sm:text-lg leading-snug whitespace-normal break-words">
+                <div className="text-white font-semibold text-lg sm:text-xl leading-snug whitespace-normal break-words">
                   {person.name}
                 </div>
-                <div className="mt-1 text-white/90 text-xs sm:text-sm leading-snug whitespace-normal break-words">
+                <div className="mt-1 text-white/90 text-sm sm:text-base leading-snug whitespace-normal break-words">
                   {person.role}
                 </div>
               </div>
+
               {person.featured ? (
-                <div className="shrink-0 rounded-full bg-white/15 border border-white/20 px-3 py-1 text-[11px] text-white/95 backdrop-blur whitespace-nowrap">
+                <div className="shrink-0 rounded-full bg-white/15 border border-white/20 px-3.5 py-1.5 text-[12px] text-white/95 backdrop-blur whitespace-nowrap">
                   Zespół
                 </div>
               ) : null}
@@ -834,7 +838,8 @@ That’s why every day we work with energy, a smile and full dedication — for 
                     <Badge variant="secondary" className="rounded-full">Centrum Nieruchomości</Badge>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* ✅ szersze kafle: lg=2 kolumny, xl=3 kolumny */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
                     {team.map((person) => <PersonCard key={person.name} person={person} />)}
                   </div>
 
