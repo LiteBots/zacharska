@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -7,7 +6,7 @@
   <title>Centrum nieruchomości - Zacharska Klaudia</title>
 
   <meta name="description" content="Centrum nieruchomości – oferty dla każdego, profesjonalne doradztwo i obsługa. Zacharska Klaudia." />
-  <link rel="canonical" href="https://twojadomena.pl/" />
+  <link rel="canonical" href="https://www.centrumnieruchomości-słupsk.pl" />
   <meta property="og:title" content="Centrum nieruchomości - Zacharska Klaudia" />
   <meta property="og:description" content="Oferty dla każdego i profesjonalne doradztwo." />
   <meta property="og:type" content="website" />
@@ -329,7 +328,7 @@
         testimonials: "Opinie klientów",
         contact: "Kontakt",
         allOffers: "Wszystkie Oferty",
-        trust: ["Sprzedaż", "Zakup", "Pełna obsługa"], // ✅ bez “Wynajem”
+        trust: ["Sprzedaż", "Zakup", "Pełna obsługa"],
         form: { name: "Imię i nazwisko", email: "Email", msg: "Wiadomość", send: "Wyślij", phone: "Numer telefonu", subject: "Temat wiadomości", consent: "Wyrażam zgodę na przetwarzanie moich danych osobowych." },
       },
       en: {
@@ -641,10 +640,14 @@
       );
     }
 
+    /* ===========================
+       ✅ ZMIANA: REELS bez "telefonu"
+       ✅ Wszystkie filmiki w poziomej linii (scroll X + snap)
+       =========================== */
     function Shorts({ t }) {
       return (
         <section id="shorts" className="w-full py-16 sm:py-24 section" aria-label={t.shorts} data-reveal>
-          <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-2 gap-10 items-center">
+          <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-2 gap-10 items-start">
             <div className="flex flex-col items-center text-center md:items-start md:text-left">
               <h3 className="text-3xl md:text-4xl font-semibold tracking-tight">{t.shorts}</h3>
               <p className="text-zinc-600 mt-2 leading-relaxed">
@@ -659,13 +662,21 @@
                   <Button variant="outline" className="rounded-2xl">Kontakt</Button>
                 </a>
               </div>
+
+              <div className="mt-6 text-sm text-zinc-500">
+                Przesuń w bok, aby zobaczyć kolejne filmy.
+              </div>
             </div>
 
-            <div className="flex items-center justify-center">
-              <div className="relative rounded-[3rem] border overflow-hidden glass shadow-[var(--shadow-soft)] hover-lift w-full max-w-[340px]" style={{ height:"min(560px, 78vh)" }}>
-                <div className="absolute inset-1 rounded-[2.6rem] overflow-y-scroll snap-y snap-mandatory scrollbar-none">
+            <div className="w-full">
+              <div className="rounded-[2rem] glass border shadow-[var(--shadow-soft)] p-3 sm:p-4">
+                <div className="flex items-stretch gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2">
                   {FACEBOOK_REELS.map((reel) => (
-                    <div key={reel.id} className="h-full w-full snap-start relative flex-shrink-0">
+                    <div
+                      key={reel.id}
+                      className="snap-start shrink-0 w-[260px] sm:w-[280px] md:w-[260px] lg:w-[280px] rounded-[1.6rem] overflow-hidden border bg-white/60 hover-lift"
+                      style={{ aspectRatio: "9 / 16" }}
+                    >
                       <iframe
                         title={"Reel " + reel.id}
                         src={reel.src}
@@ -679,7 +690,11 @@
                     </div>
                   ))}
                 </div>
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 h-7 w-24 rounded-full bg-black/80" />
+
+                <div className="mt-2 flex items-center justify-between text-xs text-zinc-500 px-1">
+                  <span>Reels</span>
+                  <span>{FACEBOOK_REELS.length} filmiki</span>
+                </div>
               </div>
             </div>
           </div>
@@ -819,9 +834,6 @@
       );
     }
 
-    /* ===========================
-       ✅ ZMIANA: Contact -> FormSubmit
-       =========================== */
     function Contact({ t }) {
       const [state, setState] = useState({ name: "", email: "", phone: "", subject: "", msg: "", consent: false });
 
@@ -892,7 +904,6 @@
                   action="https://formsubmit.co/centrumnieruchomoscikz@op.pl"
                   method="POST"
                 >
-                  {/* FormSubmit config */}
                   <input type="hidden" name="_subject" value="Nowa wiadomość — Centrum nieruchomości" />
                   <input type="hidden" name="_template" value="table" />
                   <input type="hidden" name="_captcha" value="false" />
@@ -960,7 +971,6 @@
       );
     }
 
-    // ✅ Slider działa na telefonie (touch/pointer) + desktop
     function Slider({ className, min = 0, max = 100, step = 1, defaultValue = [0, 100], onValueChange }) {
       const [values, setValues] = useState(defaultValue);
       const rangeRef = useRef(null);
@@ -1110,7 +1120,6 @@
         setQuery(""); setCity(""); setType(""); setRooms(0); setArea([30,160]); setPrice([300000,1500000]); setSort("newest"); setPage(1);
       };
 
-      // ✅ NIGDY nie sticky — nie zasłania ogłoszeń
       const filtersClass = "mt-6 grid grid-cols-1 md:grid-cols-12 gap-3 p-4 rounded-[1.6rem] glass shadow-[var(--shadow-soft)]";
 
       return (
