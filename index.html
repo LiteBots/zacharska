@@ -343,7 +343,7 @@ Od początku przyświecał nam jeden cel: robić to, co kochamy, i pozostać sob
 
 Dzięki zaufaniu klientów oraz współpracy z doświadczonymi doradcami kredytowymi i kancelarią notarialną tworzymy zgrany zespół, który działa sprawnie, profesjonalnie i z pełnym zaangażowaniem. Każda transakcja to dla nas coś więcej niż formalność — to odpowiedzialność za ważny etap w czyimś życiu.
 
-Nie dążymy do perfekcji za wszelką cenę. Wierzymy, że prawdziwy sukces buduje serce, pasja i wiara w to, że wszystko jest możliwe.
+Nie dążymy do perfekcji za wszelką cenę. Wierzymy, że prawdziwy sukces buduje serce, pasja i wiara, że wszystko jest możliwe.
 Dlatego każdego dnia pracujemy z energią, uśmiechem i pełnym oddaniem — dla Was.`,
         values: ["Zaufanie", "Profesjonalizm", "Doświadczenie", "Innowacja"],
         testimonials: "Opinie klientów",
@@ -731,7 +731,7 @@ That’s why every day we work with energy, a smile and full dedication — for 
       );
     }
 
-    // ✅ ULEPSZONA SEKCJA O NAS: lepszy układ + nowe osoby/zdjęcia + nowa historia
+    // ✅ ULEPSZONA SEKCJA O NAS: karty zespołu bez przycinania imienia/stanowiska
     function About({ t }) {
       const paragraphs = (t.story || "").split("\n\n").filter(Boolean);
 
@@ -749,6 +749,7 @@ That’s why every day we work with energy, a smile and full dedication — for 
           )}
         >
           <div className={cn("absolute inset-0 bg-gradient-to-t", person.accent)} />
+
           <img
             src={person.src}
             alt={person.name}
@@ -758,14 +759,20 @@ That’s why every day we work with energy, a smile and full dedication — for 
             )}
             loading="lazy"
           />
-          <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/55 via-black/20 to-transparent">
+
+          {/* ✅ WIĘKSZY overlay + BRAK truncate + ZAWIJANIE */}
+          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 bg-gradient-to-t from-black/65 via-black/25 to-transparent">
             <div className="flex items-end justify-between gap-3">
               <div className="min-w-0">
-                <div className="text-white font-semibold text-base sm:text-lg truncate">{person.name}</div>
-                <div className="text-white/85 text-xs sm:text-sm truncate">{person.role}</div>
+                <div className="text-white font-semibold text-base sm:text-lg leading-snug whitespace-normal break-words">
+                  {person.name}
+                </div>
+                <div className="mt-1 text-white/90 text-xs sm:text-sm leading-snug whitespace-normal break-words">
+                  {person.role}
+                </div>
               </div>
               {person.featured ? (
-                <div className="shrink-0 rounded-full bg-white/15 border border-white/20 px-3 py-1 text-[11px] text-white/95 backdrop-blur">
+                <div className="shrink-0 rounded-full bg-white/15 border border-white/20 px-3 py-1 text-[11px] text-white/95 backdrop-blur whitespace-nowrap">
                   Zespół
                 </div>
               ) : null}
