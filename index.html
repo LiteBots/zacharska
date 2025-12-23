@@ -318,14 +318,14 @@
     const SheetTitle = ({ children }) => <h2 className="text-lg font-semibold text-foreground">{children}</h2>;
     const SheetTrigger = ({ children }) => children;
 
-    /* ✅ 5 miejsc na filmiki */
-    const FACEBOOK_REELS = [
-      { id: 1, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1477845613236934%2F&show_text=false&width=267&t=0" },
-      { id: 2, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F2264670390643136%2F&show_text=false&width=267&t=0" },
-      { id: 3, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1176788144348415%2F&show_text=false&width=267&t=0" },
-      { id: 4, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1124597172587459%2F&show_text=false&width=267&t=0" },
-      { id: 5, src: "https://www.facebook.com/plugins/video.php?height=476&href=PASTE_REEL_URL_5&show_text=false&width=267&t=0" },
-    ];
+   const FACEBOOK_REELS = [
+  { id: 1, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1477845613236934%2F&show_text=false&width=267&t=0" },
+  { id: 2, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F2264670390643136%2F&show_text=false&width=267&t=0" },
+  { id: 3, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1176788144348415%2F&show_text=false&width=267&t=0" },
+  { id: 4, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1124597172587459%2F&show_text=false&width=267&t=0" },
+  { id: 5, src: "https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1187130460175678%2F&show_text=false&width=267&t=0" },
+];
+
 
     const dict = {
       pl: {
@@ -775,11 +775,7 @@ That’s why every day we work with energy, a smile and full dedication — for 
                 </div>
               </div>
 
-              {person.featured ? (
-                <div className="shrink-0 rounded-full bg-white/15 border border-white/20 px-3.5 py-1.5 text-[12px] text-white/95 backdrop-blur whitespace-nowrap">
-                  Zespół
-                </div>
-              ) : null}
+        
             </div>
           </div>
         </div>
@@ -844,7 +840,7 @@ That’s why every day we work with energy, a smile and full dedication — for 
                   </div>
 
                   <div className="mt-5 rounded-2xl border bg-white/60 p-4 text-sm text-zinc-600">
-                    Chcesz porozmawiać o sprzedaży lub zakupie? Napisz do nas — odpowiemy jeszcze dziś.
+                    Chcesz porozmawiać o sprzedaży lub zakupie? Napisz do nas — odpowiemy jak najszybciej.
                   </div>
                 </div>
               </div>
